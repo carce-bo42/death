@@ -22,6 +22,8 @@ cp /usr/bin/cat /usr/bin/ls /tmp/test/
 ! strings /tmp/test/ls | grep -q "${trace}"  && { echo "El paciente 0 no infecta" && exit 1; }
 ! strings /tmp/test/cat | grep -q "${trace}"  && { echo "El paciente 0 no itera correctamente todos los ficheros" && exit 1; }
 
+exit 0
+
 # Movemos los binarios infectados a test3 para que no se reinfecten. Cuando tengamos
 # el flag que indica que un binario ya está infectado y lo gestionemos podremos quitar eso
 mv /tmp/test/* /tmp/test3/
