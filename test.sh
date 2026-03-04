@@ -1,7 +1,7 @@
 #!/bin/bash
 
-program_name="war"
-trace="War version 1.0 (c)oded by tomartin & carce-bo"
+program_name="death"
+trace="Death version 1.0 (c)oded by tomartin & carce-bo"
 declare -a test_dirs=( /tmp/test{,2,3,4,5} )
 
 [[ ! -e ./${program_name} ]] && { echo "Que tal si compilas amigo" && exit 1; }

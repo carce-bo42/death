@@ -85,7 +85,7 @@ struc	Elf64_Phdr
     .p_align		resq	1	; Segment alignment
 endstruc
 
-struc War
+struc Death
     .fd_proc            resq    1
     .fd_dir             resq    1
     .fd_file            resq    1
@@ -130,7 +130,7 @@ endstruc
     and %1, 0xfffffffffffff000
 %endmacro
 
-%define VAR(n) [(rbp - War_size) + n]
+%define VAR(n) [(rbp - Death_size) + n]
 ; Esto es para poder acceder a los valores de la stack donde se va almacenar la struc faime
 ; |             |
 ; |             |

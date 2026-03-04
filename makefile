@@ -1,13 +1,13 @@
-NAME = war
+NAME = death
 
 SRC_DIR = src/
 OBJ_DIR = obj/
 COMP = nasm
 ASMFLAGS = -f elf64 -F dwarf
 LD = ld
-CONTAINER_NAME = docker_war
+CONTAINER_NAME = docker_death
 
-SRC_FILES = war.asm
+SRC_FILES = death.asm
 SRC = $(addprefix $(SRC_DIR), $(SRC_FILES))
 
 OBJ_FILES = $(SRC_FILES:.asm=.o)

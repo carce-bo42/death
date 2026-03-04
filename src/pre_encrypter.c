@@ -64,7 +64,7 @@ void xor_cipher(uint8_t *buf, size_t size, uint8_t *key, size_t offset,
 
 int main(int argc, char **argv) {
   uint8_t key[8] = "p3st1l3!";
-  int fd = open("war", O_RDWR);
+  int fd = open("death", O_RDWR);
   uint8_t buf[1024];
   Elf64_Ehdr *ehdr;
   Elf64_Phdr *phdr;

