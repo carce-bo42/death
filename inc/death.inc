@@ -102,7 +102,6 @@ struc Death
     .note_phdr_ptr      resq    1
     .max_vaddr_end      resq    1
     .new_entry          resq    1
-    .ts                 resb    16
 endstruc
 
 

