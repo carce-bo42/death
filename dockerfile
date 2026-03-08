@@ -2,6 +2,7 @@ FROM debian:sid-slim
 
 RUN apt update && \
     apt install -y \
+        diffutils \
 	    gawk \
         make \
         bash \
