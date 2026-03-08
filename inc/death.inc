@@ -85,6 +85,19 @@ struc	Elf64_Phdr
     .p_align		resq	1	; Segment alignment
 endstruc
 
+struc Elf64_Shdr
+    .sh_name        resd    1   ; Section name (index into string table)
+    .sh_type        resd    1   ; Section type
+    .sh_flags       resq    1   ; Section flags
+    .sh_addr        resq    1   ; Virtual address in memory
+    .sh_offset      resq    1   ; Offset in file
+    .sh_size        resq    1   ; Size of section
+    .sh_link        resd    1   ; Link to another section
+    .sh_info        resd    1   ; Additional section info
+    .sh_addralign   resq    1   ; Section alignment
+    .sh_entsize     resq    1   ; Entry size if section holds table
+endstruc
+
 struc Death
     .fd_proc            resq    1
     .fd_dir             resq    1
@@ -99,6 +112,8 @@ struc Death
     .virus_offset       resq    1
     .virus_size         resd    1
     .note_phdr_ptr      resq    1
+    .note_shdr_ptr      resq    1
+    .shstrtab_ptr       resq    1
     .max_vaddr_end      resq    1
     .new_entry          resq    1
 endstruc
