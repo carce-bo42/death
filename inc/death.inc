@@ -51,11 +51,20 @@
 
 %define CALL_METAMORPH(fun_name, nbr_of_twins) __MACRO_CALL_METAMORPH fun_name, nbr_of_twins
 %macro __MACRO_CALL_METAMORPH 2
+    push rbx
+    push rcx
+    push rsi 
+    push rdi 
     lea rsi, [rel __F_%+%1%+_0]
     lea rdi, [rel __F_%+%1]
     mov rcx, F_%+%1%+_len
+    xor rbx, rbx
     mov ebx, %2
     CALL_ENCRYPT(mod_functions)
+    pop rdi
+    pop rsi
+    pop rcx
+    pop rbx
 %endmacro
 
 
