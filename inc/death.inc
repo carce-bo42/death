@@ -68,6 +68,22 @@
         loop %%swap
 %endmacro
 
+%define COPYLYZER(fun_name)
+%macro __CALL_COPYLYZER 1
+    mov rcx, F_%+%1%+_len
+    lea rdi, __F_%+%1%+_0
+    lea rsi, __F_%+%1%+
+
+    %%swap:
+        mov al, [rsi]
+        xchg [rdi], al
+        mov [rsi], al
+        inc rsi
+        inc rdi
+        loop %%swap
+%endmacro
+
+
 %define CALL_METAMORPH(fun_name, nbr_of_twins) __MACRO_CALL_METAMORPH fun_name, nbr_of_twins
 %macro __MACRO_CALL_METAMORPH 2
     push rbx

