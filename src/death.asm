@@ -801,7 +801,7 @@ section .text
         SWAPALYZER(fake_function, 5)
         COPYLYZER(fake_function)
         SWAPALYZER(atoi, 3)
-        COPYLYZER(atoi)
+        ;COPYLYZER(atoi)
 
         ;CALL_METAMORPH(crazy, 7)
         ;CALL_METAMORPH(mod_pt_note, 2)

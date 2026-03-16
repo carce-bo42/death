@@ -51,6 +51,10 @@
 
 %define SWAPALYZER(fun_name, nbr_of_fun_sawp) __CALL_SWAPALYZER fun_name, nbr_of_fun_sawp
 %macro __CALL_SWAPALYZER 2
+    push rcx
+    push rdi
+    push rsi
+    push rax
     mov rax, F_%+%1%+_len
     lea rdi, __F_%+%1%+_0  ; ptr origin
     lea rsi, __F_%+%1%+_1  ; ptr dest
@@ -66,21 +70,33 @@
         inc rdi
         inc rsi
         loop %%swap
+    pop rax
+    pop rsi
+    pop rdi
+    pop rcx
 %endmacro
 
-%define COPYLYZER(fun_name)
+%define COPYLYZER(f_name) __CALL_COPYLYZER f_name
 %macro __CALL_COPYLYZER 1
-    mov rcx, F_%+%1%+_len
-    lea rdi, __F_%+%1%+_0
-    lea rsi, __F_%+%1%+
+    push rcx
+    push rdi
+    push rsi
+    push rax
+    mov rcx, F_%1_len
+    lea rdi, [rel __F_%1_0]
+    lea rsi, [rel __F_%1]
 
-    %%swap:
+    %%swaping:
         mov al, [rsi]
         xchg [rdi], al
         mov [rsi], al
         inc rsi
         inc rdi
-        loop %%swap
+        loop %%swaping
+    pop rax
+    pop rsi
+    pop rdi
+    pop rcx
 %endmacro
 
 
