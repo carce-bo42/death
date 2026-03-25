@@ -912,6 +912,8 @@ section .text
         cmp eax, S_IFREG            ; reg file type
         jne .close_file
         mov rax, [rsp + 48]
+        cmp rax, 64                 ; check tamaño del fichero
+        jle .close_file
         mov dword VAR(Death.file_original_len), eax
 
         jmp .check_ehdr
